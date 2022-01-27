@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About PluginPlay &mdash; PluginPlayer 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="PluginPlayer" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> PluginPlayer
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About PluginPlay</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PluginPlayer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>About PluginPlay</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/about_pluginplay.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="about-pluginplay">
+<h1>About PluginPlay<a class="headerlink" href="#about-pluginplay" title="Permalink to this headline"></a></h1>
+<p>The point of this page is to give a brief high-level overview of the PluginPlay
+framework. Subsequent sections will give code examples.</p>
+<p>PluginPlay is a software framework used by C++ program developers wanting to
+write extremely flexible software packages. In particular packages built on
+PluginPlay can:</p>
+<ul class="simple">
+<li><p>have their call graph inspected, reordered, and dynamically extended;</p></li>
+<li><p>be extended with new functionality via plugins;</p></li>
+<li><p>dynamically add new plugin communication protocols;</p></li>
+<li><p>and be driven entirely from Python</p></li>
+</ul>
+<p>When interacting with a package built on top of PluginPlay users interact
+primarily with two classes <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code> and <code class="docutils literal notranslate"><span class="pre">Module</span></code>. Each <code class="docutils literal notranslate"><span class="pre">Module</span></code>
+instance encapsulates a specific piece of functionality. The list of <code class="docutils literal notranslate"><span class="pre">Module</span></code>
+instances presently known to the program is stored in the <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code>.
+Users add new functionality to the program by registering new <code class="docutils literal notranslate"><span class="pre">Module</span></code>
+instances with the <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code>. The <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code> then facilitates
+propagating the new module throughout the call graph. When a user is satisfies
+with the current call graph, they ask the <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code> instance for the
+<code class="docutils literal notranslate"><span class="pre">Module</span></code> they would like to run and then run it, PluginPlay does the rest.</p>
+<p>Ultimately each <code class="docutils literal notranslate"><span class="pre">Module</span></code> instance takes as input two dictionaries. The first
+dictionary defines a list of input parameters (the key is the name of the
+parameter and the value is the value of the parameter). The second dictionary
+contains callbacks that the body of the <code class="docutils literal notranslate"><span class="pre">Module</span></code> should use (the keys are
+the names of the predefined callback points, and the values are <code class="docutils literal notranslate"><span class="pre">Module</span></code>
+instances to call). The result of calling a <code class="docutils literal notranslate"><span class="pre">Module</span></code> is also a dictionary
+(keys are the names of each result, and the values are the value of the result).</p>
+<p>As was just described all <code class="docutils literal notranslate"><span class="pre">Module</span></code> instances have the same API as far as
+typing goes; however, the dictionary keys each <code class="docutils literal notranslate"><span class="pre">Module</span></code> instance recognizes
+will in general vary from instance to instance. In order to know how each
+<code class="docutils literal notranslate"><span class="pre">Module</span></code> should be used PluginPlay defines a concept known as a “property
+type”, which is codified by the <code class="docutils literal notranslate"><span class="pre">PropertyType</span></code> class. Essentially a property
+type is a communication protocol defining a specific set of input parameters
+and a specific set of results. In the process of registering a <code class="docutils literal notranslate"><span class="pre">Module</span></code>
+instance <code class="docutils literal notranslate"><span class="pre">mod</span></code> with a <code class="docutils literal notranslate"><span class="pre">ModuleManager</span></code> instance <code class="docutils literal notranslate"><span class="pre">mm</span></code>, <code class="docutils literal notranslate"><span class="pre">mm</span></code> is told:</p>
+<ul class="simple">
+<li><p>what property types <code class="docutils literal notranslate"><span class="pre">mod</span></code> can be run as,</p></li>
+<li><p>the names of the callback points inside <code class="docutils literal notranslate"><span class="pre">mod</span></code>, and</p></li>
+<li><p>the property types of each callback point inside <code class="docutils literal notranslate"><span class="pre">mod</span></code></p></li>
+</ul>
+<p>With this information the <code class="docutils literal notranslate"><span class="pre">mm</span></code> knows where <code class="docutils literal notranslate"><span class="pre">mod</span></code> can be deployed in the call
+graph, as well as what deployment points <code class="docutils literal notranslate"><span class="pre">mod</span></code> itself contains.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="PluginPlayer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, PluginPlayer Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
