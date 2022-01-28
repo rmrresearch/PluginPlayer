@@ -7,3 +7,4 @@ PluginPlayer
    :caption: Contents:
 
    about_pluginplay
+   pluginplay_python_api/index

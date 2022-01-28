@@ -7,6 +7,7 @@
 # http://www.sphinx-doc.org/en/master/config
 
 import os
+import sys
 
 # -- Project information -----------------------------------------------------
 
@@ -14,9 +15,16 @@ project = u'PluginPlayer'
 copyright = u'2022, PluginPlayer Team'
 author = u'PluginPlayer Team'
 
+# Figure out some paths we want to use
+dir_path = os.path.dirname(os.path.realpath(__file__))
+doc_path = os.path.dirname(dir_path)
+root_path = os.path.dirname(doc_path)
+sys.path.append(os.path.join(root_path, 'src'))
+
 # Get the version from version.txt
-with open('../../version.txt', 'r') as file:
+with open(os.path.join(root_path, 'version.txt'), 'r') as file:
     version = file.read().replace('\n', '')
+
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -42,9 +50,6 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages'
 ]
-dir_path = os.path.dirname(os.path.realpath(__file__))
-doc_path = os.path.dirname(dir_path)
-root_path = os.path.dirname(doc_path)
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
@@ -156,8 +161,16 @@ texinfo_documents = [
      author, project, 'One line description of project.', 'Miscellaneous'),
 ]
 
-
 # -- Extension configuration -------------------------------------------------
+
+# -- Options for autodoc extension -------------------------------------------
+
+autodoc_default_options = {
+    'members' : True,
+    'member-order' : 'bysource',
+    'special-members' : '__init__',
+    'undoc-members' : True
+}
 
 # -- Options for intersphinx extension ---------------------------------------
 
