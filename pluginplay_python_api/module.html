@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Module Class &mdash; PluginPlayer 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PropertyType Class" href="property_type.html" />
+    <link rel="prev" title="PluginPlay Python API" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> PluginPlayer
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about_pluginplay.html">About PluginPlay</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PluginPlay Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Module Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="property_type.html">PropertyType Class</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PluginPlayer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">PluginPlay Python API</a> &raquo;</li>
+      <li>Module Class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/pluginplay_python_api/module.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-pluginplayer.module">
+<span id="module-class"></span><h1>Module Class<a class="headerlink" href="#module-pluginplayer.module" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pluginplayer.module.Module">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pluginplayer.module.</span></span><span class="sig-name descname"><span class="pre">Module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module" title="Permalink to this definition"></a></dt>
+<dd><p>Encapsulates a user-supplied function.</p>
+<p>To extend the functionality of a program written on top of PluginPlay, users
+write modules. Each Module instance is essentially a function with some
+associated meta-data. In the real PluginPlay Module creation is rather
+involved. Here we focus on the main aspects of the Module class:</p>
+<ol class="arabic simple">
+<li><p>It’s API (the API presented here closesly mirrors the real API)</p></li>
+<li><p>It has some state injected by PluginPlay (e.g., <code class="docutils literal notranslate"><span class="pre">_locked</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">_is_memoizable</span></code>)</p></li>
+<li><p>It has state set by the Module developer (<code class="docutils literal notranslate"><span class="pre">_state</span></code>)</p></li>
+<li><p>It wraps some underlying callback</p></li>
+<li><p>Manipulation of most of the Module’s state is done through the
+ModuleManager</p></li>
+</ol>
+<p>Keep in mind the real implementation is written in C++ and exposed to
+Python, whereas this implementation here is simply meant to provide a
+working implementation of the real API. The point being the API and design
+of this class may seem heavy-handed and odd at times, but in the real class
+there’s (usually) reasons for the design.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a Module instance initialized with the provided state</p>
+<p>In practice Modules are initialized by the library which provides them.
+This initialization process can be rather complex. For the purposes of
+the PluginPlay API we just specify this state via the ctor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – See below</p>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><em>callback_name</em> (<code class="docutils literal notranslate"><span class="pre">str</span></code>) – A distinguishing name for the wrapped
+callback.</p></li>
+<li><p><em>callback</em> (<code class="docutils literal notranslate"><span class="pre">callable</span></code>) – The actual callback to wrap.</p></li>
+<li><p><em>citations</em> (<code class="docutils literal notranslate"><span class="pre">[str]</span></code>) – What sources users of this module should
+cite and/or give credit to.</p></li>
+<li><p><em>description</em> (<code class="docutils literal notranslate"><span class="pre">str</span></code>) – A detailed description of what the
+callback does.</p></li>
+<li><p><em>inputs</em> (<code class="docutils literal notranslate"><span class="pre">{str</span> <span class="pre">:</span> <span class="pre">obj}</span></code>) – Map from the name of the input to its
+default value for additional inputs recognized by the callable
+beyond those specified in the property types.</p></li>
+<li><p><em>property_types</em> (<code class="docutils literal notranslate"><span class="pre">{PropertyTypes}</span></code>) – Set of property types
+that the callback can be used as.</p></li>
+<li><p><em>results</em> (<code class="docutils literal notranslate"><span class="pre">{str}</span></code>) – Set containing the names of the additional
+results the callback returns beyond those of the property types.</p></li>
+<li><p><em>submods</em> (<code class="docutils literal notranslate"><span class="pre">{str</span> <span class="pre">:</span> <span class="pre">Module}</span></code>) – Map from callback point to the
+callback which should be called at that point.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.unlocked_copy">
+<span class="sig-name descname"><span class="pre">unlocked_copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.unlocked_copy" title="Permalink to this definition"></a></dt>
+<dd><p>Makes a deepcopy of the current module, which can be modified.</p>
+<p>Once a Module instance starts running its state can no longer be
+modified. Sometimes a user wants to run the same instance again, but
+with slightly different state. This function can be used to create a
+deep copy (<em>i.e.</em>, not aliased to the present instance) which can be
+modified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A deepcopy of the current instance, except that the copy is
+unlocked.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pluginplayer.module.Module" title="pluginplayer.module.Module">Module</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.has_module">
+<span class="sig-name descname"><span class="pre">has_module</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.has_module" title="Permalink to this definition"></a></dt>
+<dd><p>Determines if the current Module actually wraps a callable.</p>
+<p>For various reasons we need the Module class to be default constructable
+(<em>i.e.</em>, constructor can be called with no arguments). If an instance is
+default constructed then it won’t contain a callback. This function can
+be used to check if the present instance contains a callback or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if this instance wraps a callback and False otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.has_description">
+<span class="sig-name descname"><span class="pre">has_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.has_description" title="Permalink to this definition"></a></dt>
+<dd><p>Determines if a module has a description.</p>
+<p>For the PluginPlay Mokup this function is fairly trivial. In the real
+PluginPlay there are several levels of indirection which make this less
+obvious.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if this instance has a description and False otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.locked">
+<span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.locked" title="Permalink to this definition"></a></dt>
+<dd><p>If a Module is locked, users can no longer modify its state.</p>
+<p>Modules may be run concurrently. Before the Module is run it is first
+locked. Once a Module is locked its state can no longer be changed and
+consequently we don’t have to worry about its state being changed while
+it is running.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the module is locked and False otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.list_not_ready">
+<span class="sig-name descname"><span class="pre">list_not_ready</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.list_not_ready" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.ready">
+<span class="sig-name descname"><span class="pre">ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.ready" title="Permalink to this definition"></a></dt>
+<dd><p>Determines if the present Module can be run as PropertyType prop_type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prop_type</strong> (<a class="reference internal" href="property_type.html#pluginplayer.property_type.PropertyType" title="pluginplayer.property_type.PropertyType"><em>PropertyType</em></a>) – The PropertyType we are attempting to run the module
+as.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if in its current state the present instance can be run as
+PropertyType prop_type and False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.reset_cache">
+<span class="sig-name descname"><span class="pre">reset_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.reset_cache" title="Permalink to this definition"></a></dt>
+<dd><p>Forgets all the results that the Module has computed.</p>
+<p>For performance reasons and for reproducability reasons, Module
+instances keep track of all of the results they have computed. These
+results are stored in an internal cache. It is sometimes the case that
+these caches can fill up with large temporary intermediates. This
+function wipes out the cache associated with this Module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.is_memoizable">
+<span class="sig-name descname"><span class="pre">is_memoizable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.is_memoizable" title="Permalink to this definition"></a></dt>
+<dd><p>Determines if calls to the Module can be memoized.</p>
+<p>Memoization is a technique where calls to functions are ellided when the
+results are already known. Typically this is done by storing a hash map
+from inputs to already computed results. That said, not all functions
+can be ellided (for example those which invoke random number generators,
+or those which use additional inputs beyond the ones which were hashed).
+Furthermore the user may not want a call to be memoized (e.g., if
+storing the result long term would consume too many resources).</p>
+<p>Regardless of the reason why it, or why it can not, this function is
+used to determine if calls to the current Module can be memoized.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.turn_off_memoization">
+<span class="sig-name descname"><span class="pre">turn_off_memoization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.turn_off_memoization" title="Permalink to this definition"></a></dt>
+<dd><p>Makes it so that the Module actually runs everytime it is called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.turn_on_memoization">
+<span class="sig-name descname"><span class="pre">turn_on_memoization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.turn_on_memoization" title="Permalink to this definition"></a></dt>
+<dd><p>When on the Module will avoid rerunning previously seen inputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.lock">
+<span class="sig-name descname"><span class="pre">lock</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.lock" title="Permalink to this definition"></a></dt>
+<dd><p>When a Module is locked its state can no longer be changed.</p>
+<p>Calling this function will lock the Module. Once locked all attempts to
+change the Module through the public API will raise exceptions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.results">
+<span class="sig-name descname"><span class="pre">results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.results" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.inputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.submods">
+<span class="sig-name descname"><span class="pre">submods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.submods" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.property_types">
+<span class="sig-name descname"><span class="pre">property_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.property_types" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.description" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.citations">
+<span class="sig-name descname"><span class="pre">citations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.citations" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.change_input">
+<span class="sig-name descname"><span class="pre">change_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.change_input" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.change_submod">
+<span class="sig-name descname"><span class="pre">change_submod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.change_submod" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.add_property_type">
+<span class="sig-name descname"><span class="pre">add_property_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_prop_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.add_property_type" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.run_as">
+<span class="sig-name descname"><span class="pre">run_as</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.run_as" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.run" title="Permalink to this definition"></a></dt>
+<dd><p>This call actually runs the Module with the provided inputs.</p>
+<p>Each Module instance has some input state bound to it. In particular it
+has input parameter values bound to <code class="docutils literal notranslate"><span class="pre">Module._state['inputs']</span></code> and
+submodules bound to <code class="docutils literal notranslate"><span class="pre">Module._state['submods']</span></code>. The actual call to the
+submodule is given <code class="docutils literal notranslate"><span class="pre">Module._state['submods']</span></code> and the union of
+<code class="docutils literal notranslate"><span class="pre">inputs</span></code> with <code class="docutils literal notranslate"><span class="pre">Module._state['inputs']</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>{str</em><em>, </em><em>obj}</em>) – The positional arguments given to the Module, wrapped in
+a dictionary.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary whose keys are the names of the results and whose
+values are the values of the respective result.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>{str, obj}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplayer.module.Module.hash">
+<span class="sig-name descname"><span class="pre">hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.Module.hash" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pluginplayer.module.print_not_ready">
+<span class="sig-prename descclassname"><span class="pre">pluginplayer.module.</span></span><span class="sig-name descname"><span class="pre">print_not_ready</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplayer.module.print_not_ready" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="PluginPlay Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="property_type.html" class="btn btn-neutral float-right" title="PropertyType Class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, PluginPlayer Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
