@@ -411,41 +411,133 @@ bound to those points) that this Module recognizes.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.property_types">
 <span class="sig-name descname"><span class="pre">property_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.property_types" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Provides the set of PropertyTypes that the module satisfies.</p>
+<p>Most Module instances can be run as one (or more) property type(s). This
+function is used to determine which PropertyTypes the module satisfies.
+The exact PropertyTypes a module can satisfy is specified by the module
+developer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The set of PropertyTypes that the module satisfies</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.10)">set</a>(<a class="reference internal" href="property_type.html#pluginplay.PropertyType" title="pluginplay.PropertyType">PropertyType</a>)</p>
+</dd>
+<dt class="field-odd">Rasies RuntimeError</dt>
+<dd class="field-odd"><p>If the instance does not wrap a callback</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.description">
 <span class="sig-name descname"><span class="pre">description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.description" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Provides the description of the module.</p>
+<p>Module developers are encouraged to provide a description of what their
+module does. This function retrieves that description (if it was set).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The description of the module.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the instance does not wrap a callback</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the description was not set</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.citations">
 <span class="sig-name descname"><span class="pre">citations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.citations" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>List of references to cite if you use this Module.</p>
+<p>Most modules encapsulate algorithms which have been published in the
+literature. Module developers are encouraged to provide a list of
+literature references for the module implementations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The literature references users of this Module should cite.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the instance does not wrap a callback.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.change_input">
 <span class="sig-name descname"><span class="pre">change_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.change_input" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Changes the value of a Module-specific input.</p>
+<p>Modules have two types of inputs: those which are taken from positional
+arguments (defined as part of one or more PropertyTypes) and those which
+are specific to the Module. This function can only be used to change the
+module-specific ones (in the real implementation it can change all the
+inputs).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module does not wrap a callback.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module is locked.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If the Module does not have an input <code class="docutils literal notranslate"><span class="pre">key</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.change_submod">
 <span class="sig-name descname"><span class="pre">change_submod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_mod</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.change_submod" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pluginplay.Module.add_property_type">
-<span class="sig-name descname"><span class="pre">add_property_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_prop_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.add_property_type" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Changes the submodule this module will call.</p>
+<p>The actual implementation of a Module can define multiple callback
+points. Before the module can be run there must be a Module assigned to
+each of those callback points. This function allows the user to change
+what Module is called at a specified callback point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module does not wrap a callback</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module is locked</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If the Module does not have a callback point
+associated with <code class="docutils literal notranslate"><span class="pre">key</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.run_as">
-<span class="sig-name descname"><span class="pre">run_as</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.run_as" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">run_as</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_type</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.run_as" title="Permalink to this definition"></a></dt>
+<dd><p>Calls the wrapped callable as the specified property type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prop_type</strong> (<a class="reference internal" href="property_type.html#pluginplay.PropertyType" title="pluginplay.PropertyType"><em>PropertyType</em></a>) – The PropertyType the callable should be run as.</p></li>
+<li><p><strong>*args</strong> – The positional arguments to be forwarded to the callable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result(s) specified by <code class="docutils literal notranslate"><span class="pre">prop_type</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the module does not wrap a callable.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the module is not ready</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the module does not satisfy <code class="docutils literal notranslate"><span class="pre">prop_type</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.Module.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.run" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.run" title="Permalink to this definition"></a></dt>
 <dd><p>This call actually runs the Module with the provided inputs.</p>
 <p>Each Module instance has some input state bound to it. In particular it
 has input parameter values bound to <code class="docutils literal notranslate"><span class="pre">Module._state['inputs']</span></code> and
@@ -464,13 +556,15 @@ values are the values of the respective result.</p>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>{str, obj}</p>
 </dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module does not wrap a callable.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the Module is not ready</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.10)"><strong>BaseException</strong></a> – If the callable raises an error</p></li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pluginplay.Module.hash">
-<span class="sig-name descname"><span class="pre">hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.Module.hash" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
