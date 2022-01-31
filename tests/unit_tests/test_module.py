@@ -1,5 +1,16 @@
-from pluginplayer import module
+import pluginplay as pp
 import unittest
+
+class PT0(pp.PropertyType):
+    """Effective signature: result0 (input0)"""
+
+    def __init__(self):
+        inputs = [('input 0', None)]
+        results = ['result 0']
+        return super().__init__(inputs, results)
+
+
+
 
 class TestModule(unittest.TestCase):
     def setUp(self):
@@ -16,16 +27,31 @@ class TestModule(unittest.TestCase):
         self.nondefault_state = {'callback_name' : 'foo',
                                  'citations' : ['foo et al.'],
                                  'description' : 'Hello World!!!',
-                                 'inputs' : {'input 0' : None, 'input 1' : 2},
-                                 'property_types' : set('foo'),
-                                 'results' : set('foo'),
-                                 'submods' : {'callback 0' : module.Module()}
+                                 'inputs' : {'input x' : None},
+                                 'property_types' : set([PT0()]),
+                                 'results' : set(['result x']),
+                                 'submods' : {('callback 0', PT0()) : None}
                                 }
+
+        fxn = lambda inputs, submods : 42
+
+        # This module is ready and can be run
+        self.ready_submod  = pp.Module(property_types=set([PT0()]))
+        self.ready_submod._state['callback'] = fxn
+
+        # This module is not ready because 'input x' isn't set
+        self.not_ready_submod = pp.Module(inputs= {'input x' : None },
+                                          property_types=set([PT0()]))
+        self.not_ready_submod._state['callback'] = fxn
+
+        # This module isn't ready because 'input x' and 'callback 0' aren't set
+        self.nondefault_mod = pp.Module(**self.nondefault_state)
+        self.nondefault_mod._state['callback'] = fxn
 
 
     def test_ctor(self):
         # Test the default ctor
-        mod = module.Module()
+        mod = pp.Module()
         self.assertEqual(mod._unlocked, True)
         self.assertEqual(mod._cache, {})
         self.assertEqual(mod._is_memoizable, True)
@@ -37,7 +63,7 @@ class TestModule(unittest.TestCase):
         # state is the same.
 
         for k,v in self.nondefault_state.items():
-            nondefault = module.Module(**{k : v})
+            nondefault = pp.Module(**{k : v})
             mod._state[k] = v
             self.assertEqual(mod, nondefault)
             mod._state[k] = self.default_state[k]
@@ -45,7 +71,7 @@ class TestModule(unittest.TestCase):
 
 
     def test_unlocked_copy(self):
-        mod = module.Module()
+        mod = pp.Module()
         mod._unlocked = False
 
         a_copy = mod.unlocked_copy()
@@ -56,38 +82,94 @@ class TestModule(unittest.TestCase):
 
 
     def test_has_module(self):
-        mod = module.Module()
+        mod = pp.Module()
         self.assertFalse(mod.has_module())
 
-        mod._state['callback'] = lambda inputs, submods : {}
+        mod = self.ready_submod
         self.assertTrue(mod.has_module())
 
 
     def test_has_description(self):
-        mod = module.Module()
+        # Calling on a default module raises an exception
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.has_description)
+
+        # With a callable, but no description
+        mod = self.ready_submod
         self.assertFalse(mod.has_description())
 
+        # With a callable, and a description
         mod._state['description'] = 'A description'
         self.assertTrue(mod.has_description())
 
 
     def test_locked(self):
-        mod = module.Module()
+        mod = pp.Module()
         self.assertFalse(mod.locked())
 
         mod._unlocked = False
         self.assertTrue(mod.locked())
 
+
     def test_list_not_ready(self):
-        pass
+        # Calling a default module raises an exception
+        mod0 = pp.Module()
+        self.assertRaises(RuntimeError, mod0.list_not_ready)
+
+        # Ready, but still shows the input for the PT
+        mod0 =self.ready_submod
+        corr = {'Inputs' : set(['input 0']), 'Submodules' : set()}
+        self.assertEqual(mod0.list_not_ready(), corr)
+
+        # Not ready because inputs aren't set
+        mod1 = self.not_ready_submod
+        corr = {'Inputs' : set(['input x', 'input 0']), 'Submodules' : set()}
+        self.assertEqual(mod1.list_not_ready(), corr)
+
+        # Not ready b/c inputs and a submodule aren't set
+        mod2 = self.nondefault_mod
+        corr = {'Inputs' : set(['input x','input 0']),
+                'Submodules' : set(['callback 0'])}
+        self.assertEqual(mod2.list_not_ready(), corr)
+
+        # Not ready b/c submodule isn't ready
+        mod2._state['submods'][('callback 0', PT0())] = self.not_ready_submod
+        self.assertEqual(mod2.list_not_ready(), corr)
+
+        # Setting submodule to a ready one removes it from the list
+        mod2._state['submods'][('callback 0', PT0())] = self.ready_submod
+        corr = {'Inputs' : set(['input x', 'input 0']), 'Submodules' : set()}
+        self.assertEqual(mod2.list_not_ready(), corr)
 
 
     def test_ready(self):
-        pass
+        pt = PT0()
+
+        # Calling a default module raises an exception
+        mod0 = pp.Module()
+        self.assertRaises(RuntimeError, mod0.ready, pt)
+
+        # Not ready b/c 'input x' isn't set
+        mod1 = self.not_ready_submod
+        self.assertFalse(mod1.ready(pt))
+        mod1._state['inputs']['input x'] = 42
+        self.assertTrue(mod1.ready(pt))
+
+        # The ready submod is actually ready
+        mod2 = self.ready_submod
+        self.assertTrue(mod2.ready(pt))
+
+        # Not ready b/c 'input x' and 'callback 0' isn't set
+        mod3 = self.nondefault_mod
+        self.assertFalse(mod3.ready(pt))
+        mod3._state['inputs']['input x'] = 42
+        self.assertFalse(mod3.ready(pt))
+        mod3._state['submods'][('callback 0', pt)] = self.ready_submod
+        self.assertTrue(mod3.ready(pt))
 
 
     def test_reset_cache(self):
-        mod = module.Module()
+        mod = pp.Module()
         mod._cache['hello'] = 'world'
 
         mod.reset_cache()
@@ -95,42 +177,93 @@ class TestModule(unittest.TestCase):
 
 
     def test_is_memoizable(self):
-        mod = module.Module()
-        self.assertTrue(mod.is_memoizable())
+        # Default module raises an exception
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.is_memoizable)
 
-        mod._is_memoizable = False
-        self.assertFalse(mod.is_memoizable())
+        mod0 = self.nondefault_mod
+        self.assertTrue(mod0.is_memoizable())
+
+        mod0._is_memoizable = False
+        self.assertFalse(mod0.is_memoizable())
 
 
     def test_turn_off_memoization(self):
-        mod = module.Module()
-        mod.turn_off_memoization()
-        self.assertFalse(mod._is_memoizable)
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.turn_off_memoization)
+
+        mod0 = self.nondefault_mod
+        mod0.turn_off_memoization()
+        self.assertFalse(mod0._is_memoizable)
 
         # Calling it twice does nothing
-        mod.turn_off_memoization()
-        self.assertFalse(mod._is_memoizable)
+        mod0.turn_off_memoization()
+        self.assertFalse(mod0._is_memoizable)
 
 
     def test_turn_on_memoization(self):
-        mod = module.Module()
-        self.assertTrue(mod._is_memoizable)
-        mod.turn_on_memoization()
-        self.assertTrue(mod._is_memoizable)
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.turn_on_memoization)
 
-        mod._is_memoizable = False
-        mod.turn_on_memoization()
-        self.assertTrue(mod._is_memoizable)
+        # Does nothing if already memoizable
+        mod0 = self.nondefault_mod
+        self.assertTrue(mod0._is_memoizable)
+        mod0.turn_on_memoization()
+        self.assertTrue(mod0._is_memoizable)
+
+        # Actually turns it on, if it was off
+        mod0._is_memoizable = False
+        mod0.turn_on_memoization()
+        self.assertTrue(mod0._is_memoizable)
 
 
     def test_lock(self):
-        mod = module.Module()
-        mod.lock()
-        self.assertTrue(mod.locked())
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.lock)
+
+        # Raises an error if a submodule isn't ready
+        mod0 = self.nondefault_mod
+        self.assertRaises(RuntimeError, mod0.lock)
+
+        # Can lock a ready module
+        self.ready_submod.lock()
+        self.assertTrue(self.ready_submod.locked())
+
+
+    def test_results(self):
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.results)
+
+        mod1 = self.nondefault_mod
+        corr = set(['result x', 'result 0'])
+        self.assertEqual(mod1.results(), corr)
+
+
+    def test_inputs(self):
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.results)
+
+        mod0 = self.nondefault_mod
+        corr = {'input 0' : None, 'input x' : None }
+        self.assertEqual(mod0.inputs(), corr)
+
+
+    def test_submods(self):
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.submods)
+
+        mod0 = self.nondefault_mod
+        corr = {'callback 0' : None}
+        self.assertEqual(mod0.submods(), corr)
+
+        mod0._state['submods'][('callback 0', PT0())] = self.ready_submod
+        corr = {'callback 0' : self.ready_submod}
+        self.assertEqual(mod0.submods(), corr)
+
 
     def test_comparisons(self):
-
-        lhs, rhs = module.Module(), module.Module()
+        lhs, rhs = pp.Module(), pp.Module()
 
         self.assertEqual(lhs, rhs)
 
@@ -151,10 +284,10 @@ class TestModule(unittest.TestCase):
         lhs._state['description'] = 'foo bar'
         self.assertEqual(lhs, rhs)
 
-        lhs._state['results'] = set('hello')
-        rhs._state['results'] = set('bar')
+        lhs._state['results'] = set(['hello'])
+        rhs._state['results'] = set(['bar'])
         self.assertNotEqual(lhs, rhs)
-        lhs._state['results'] = set('bar')
+        lhs._state['results'] = set(['bar'])
         self.assertEqual(lhs, rhs)
 
         lhs._state['inputs']['hello'] = 'bar'
@@ -167,8 +300,8 @@ class TestModule(unittest.TestCase):
 
         # TODO: Test property types
 
-        lhs._state['citations'] = set('Foo et al.')
-        rhs._state['citations'] = set('Bar et al.')
+        lhs._state['citations'] = set(['Foo et al.'])
+        rhs._state['citations'] = set(['Bar et al.'])
         self.assertNotEqual(lhs, rhs)
-        lhs._state['citations'] = set('Bar et al.')
+        lhs._state['citations'] = set(['Bar et al.'])
         self.assertEqual(lhs, rhs)

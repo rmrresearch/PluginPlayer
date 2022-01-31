@@ -1,6 +1,6 @@
 from copy import deepcopy
-from re import L
 
+from pluginplay import property_type
 
 class Module:
     """ Encapsulates a user-supplied function.
@@ -24,6 +24,16 @@ class Module:
     of this class may seem heavy-handed and odd at times, but in the real class
     there's (usually) reasons for the design.
     """
+
+    def __assert_has_module(self):
+        """Code factorization for asserting that the instance wraps a callable.
+
+        :raises RuntimeError: If the Module is not wrapping a callable.
+        """
+
+        if not self.has_module():
+            raise RuntimeError("No callable in the Module.")
+
 
     def __init__(self, **kwargs):
         r""" Creates a Module instance initialized with the provided state
@@ -49,8 +59,10 @@ class Module:
              that the callback can be used as.
            - *results* (``{str}``) -- Set containing the names of the additional
              results the callback returns beyond those of the property types.
-           - *submods* (``{str : Module}``) -- Map from callback point to the
-             callback which should be called at that point.
+           - *submods* (``{(str, PropertyType : Module}``) -- Map from pairs
+             (0th element is the name of the callback point, 1st element is the
+             property type it will be called as) to the module which should be
+             called at that point.
         """
 
         # Tracks whether the module is unlocked (meaning user can modify)
@@ -93,9 +105,11 @@ class Module:
                  unlocked.
         :rtype: Module
         """
+
         rv = deepcopy(self)
         rv._unlocked = True
         return rv
+
 
     def has_module(self):
         """Determines if the current Module actually wraps a callable.
@@ -111,6 +125,7 @@ class Module:
 
         return self._state['callback'] != None
 
+
     def has_description(self):
         """Determines if a module has a description.
 
@@ -120,9 +135,13 @@ class Module:
 
         :return: True if this instance has a description and False otherwise.
         :rtype: bool
+
+        :raises RuntimeError: If the instance does not contain a callable.
         """
 
+        self.__assert_has_module()
         return self._state['description'] != None
+
 
     def locked(self):
         """If a Module is locked, users can no longer modify its state.
@@ -138,21 +157,81 @@ class Module:
 
         return not self._unlocked
 
+
     def list_not_ready(self):
-        pass
+        """Used to determine which inputs and submodules of this module are not
+           set.
+
+        This function loops over the inputs and submodules of the present
+        instance and returns a list of the inputs which are not ready (set to
+        None, including those in the a property types) and a list of submodules
+        which are not ready (either because they are set to none, or because
+        calling their ``ready`` member indicates that they are not ready yet).
+
+        :raises RuntimeError: If the Module does not wrap a callable.
+        """
+
+        self.__assert_has_module()
+
+        rv = {'Inputs' : set(), 'Submodules' : set()}
+        for pt in self._state['property_types']:
+            for (k,v) in pt.inputs():
+                if v == None:
+                    rv['Inputs'].add(k)
+        for k,v in self._state['inputs'].items():
+            if v == None:
+                rv['Inputs'].add(k)
+        for k,v in self._state['submods'].items():
+            if v == None:
+                rv['Submodules'].add(k[0])
+            elif not v.ready(k[1]):
+                rv['Submodules'].add(k[0])
+
+        return rv
+
+
 
     def ready(self, prop_type):
-        """Determines if the present Module can be run as PropertyType prop_type
+        """Determines if the present Module is ready to be run as PropertyType
+           prop_type.
+
+        A module can be run as a PropertyType `prop_type` if all of the
+        submodules are ready and if the only unset inputs are also inputs to
+        `prop_type`. If this is the case then invoking the module like:
+
+        .. code-block:: python
+
+           mod.run_as(prop_type, input0, input1)
+
+        (for sake of example we assumed the property type defines two inputs)
+        then provides the underlying callback all of the inputs it needs to run.
 
         :param prop_type: The PropertyType we are attempting to run the module
                           as.
         :type prop_type: PropertyType
 
-        :return: True if in its current state the present instance can be run as
-                 PropertyType prop_type and False otherwise.
+        :return: True if in its current state the present instance is ready to
+                 be run as PropertyType prop_type and False otherwise.
         :rtype: bool
+
+        :raises RuntimeError: If the instance does not wrap a callback.
         """
-        return True
+
+        self.__assert_has_module()
+
+        nr = self.list_not_ready()
+
+        # If any of the submodules aren't ready then this Module isn't ready
+        if len(nr['Submodules']):
+            return False
+
+        # Need to remove pt_inputs from nr
+        for (pt_input, _) in prop_type.inputs():
+            if pt_input in nr['Inputs']:
+                nr['Inputs'].remove(pt_input)
+
+        return len(nr['Inputs']) == 0
+
 
     def reset_cache(self):
         """Forgets all the results that the Module has computed.
@@ -165,6 +244,7 @@ class Module:
         """
 
         self._cache = {}
+
 
     def is_memoizable(self):
         """Determines if calls to the Module can be memoized.
@@ -179,33 +259,123 @@ class Module:
 
         Regardless of the reason why it, or why it can not, this function is
         used to determine if calls to the current Module can be memoized.
+
+        :return: True if the Module has memoization enabled and False otherwise.
+        :rtype: bool
+
+        :raises RuntimeError: If the instance does not wrap a callback
         """
+
+        self.__assert_has_module()
         return self._is_memoizable
 
+
     def turn_off_memoization(self):
-        """Makes it so that the Module actually runs everytime it is called."""
+        """Makes it so that the Module actually runs everytime it is called.
+
+        :raises RuntimeError: If the instance does not wrap a callback
+        """
+
+        self.__assert_has_module()
         self._is_memoizable = False
 
+
     def turn_on_memoization(self):
-        """When on the Module will avoid rerunning previously seen inputs."""
+        """When on the Module will avoid rerunning previously seen inputs.
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+
+        self.__assert_has_module()
         self._is_memoizable = True
+
 
     def lock(self):
         """When a Module is locked its state can no longer be changed.
 
         Calling this function will lock the Module. Once locked all attempts to
         change the Module through the public API will raise exceptions.
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        :raises RuntimeError: If any submodule is not ready to run.
         """
+
+        self.__assert_has_module()
+
+        for k, v in self._state['submods'].items():
+            if v == None or not v.ready(k[1]):
+                raise RuntimeError(k[0] + " is not ready!")
+
         self._unlocked = False
 
+
     def results(self):
-        return self._state['results']
+        """Read-only accessor for viewing the results the Module will compute.
+
+        For the real PluginPlay, the underlying implementation is in C++ and
+        uses getters/setters. This function will return the results that the
+        Module can compute (both those specific to the Module and those from a
+        property type). The return will be a deep copy to avoid aliasing the
+        internal state.
+
+        :return: The set of result names/descriptions which this Module can
+                 compute.
+        :rtype: set(str)
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+
+        self.__assert_has_module()
+        rv = deepcopy(self._state['results'])
+        for pt in self._state['property_types']:
+            for r in pt.results():
+                rv.add(r)
+        return rv
 
     def inputs(self):
-        return self._state['inputs']
+        """Read-only accessor for viewing the inputs to the Module.
+
+        For the real PluginPlay, the underlying implementation is in C++ and
+        uses getters/setters. This function will return the set of inputs that
+        the Module requires (both those specific to the Module and those from a
+        property type). The return will be a deep copy to avoid aliasing the
+        internal state.
+
+        :return: The set of input names/descriptions (and their default values,
+                 if set) which this Module recognizes.
+        :rtype: dict(str, obj)
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+
+        self.__assert_has_module()
+        rv = deepcopy(self._state['inputs'])
+        for pt in self._state['property_types']:
+            for r in pt.inputs():
+                rv[r[0]] = r[1]
+        return rv
+
 
     def submods(self):
-        return self._state['submods']
+        """Read-only accessor for viewing the submodule callback points of the
+           Module.
+
+        For the real PluginPlay, the underlying implementation is in C++ and
+        uses getters/setters. This function will return the names of the
+        callback points, as well as the modules bound to those callback points.
+
+        :return: The set of submodule callback points (and the modules currently
+                 bound to those points) that this Module recognizes.
+        :rtype: dict(str, Module)
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+        self.__assert_has_module()
+        rv = {}
+        for k,v in self._state['submods'].items():
+            rv[k[0]] = deepcopy(v)
+        return rv
+
 
     def property_types(self):
         return self._state['property_types']
@@ -272,6 +442,10 @@ class Module:
                  otherwise.
         :rtype: bool
         """
+
+        # Can end up comparing against None when attempting to compare submods
+        if rhs == None:
+            return False
 
         return self._unlocked == rhs._unlocked and self._state == rhs._state
 

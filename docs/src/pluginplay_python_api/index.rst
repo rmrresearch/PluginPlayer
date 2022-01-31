@@ -2,7 +2,8 @@
 PluginPlay Python API
 #####################
 
-The following sections document the Python API of PluginPlay.
+The following sections document the Python API of PluginPlay (not to be confused
+with PluginPlayer).
 
 .. toctree::
    :maxdepth: 2

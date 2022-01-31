@@ -234,3 +234,6 @@ class PropertyType:
         :rtype: bool
         """
         return self._inputs == rhs._inputs and self._results == rhs._results
+
+    def __hash__(self):
+        return hash((tuple(self._inputs), tuple(self._results)))

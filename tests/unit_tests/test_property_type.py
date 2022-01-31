@@ -1,4 +1,4 @@
-from pluginplayer import property_type
+from pluginplay import property_type
 import unittest
 
 # Define some example property types for unit testing purposes
