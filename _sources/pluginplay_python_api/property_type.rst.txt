@@ -2,4 +2,4 @@
 PropertyType Class
 ******************
 
-.. automodule:: pluginplayer.property_type
+.. autoclass:: pluginplay.PropertyType

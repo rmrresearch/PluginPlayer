@@ -2,4 +2,4 @@
 Module Class
 ************
 
-.. automodule:: pluginplayer.module
+.. autoclass:: pluginplay.Module

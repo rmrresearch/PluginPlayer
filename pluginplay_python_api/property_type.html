@@ -76,6 +76,201 @@
              
   <section id="propertytype-class">
 <h1>PropertyType Class<a class="headerlink" href="#propertytype-class" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pluginplay.PropertyType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pluginplay.</span></span><span class="sig-name descname"><span class="pre">PropertyType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType" title="Permalink to this definition"></a></dt>
+<dd><p>Defines an effective function API for calling a Module.</p>
+<p>All Module instances actually are invoked like:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">mod</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">Module</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where both results and inputs are kwargs-like.</p>
+<p>Particluarly in C++ the wrapping and unwrapping of the the inputs and
+results is a lot of nasty, heavily templated boilerplate. For this reason we
+came up with the “property type” concept. Each property type defines a
+mapping from positional arguments to their elements in the inputs/results
+maps passed to <code class="docutils literal notranslate"><span class="pre">Module.run</span></code>. Using the property type <code class="docutils literal notranslate"><span class="pre">PT</span></code> a call to run
+a <code class="docutils literal notranslate"><span class="pre">Module</span></code> looks more like:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">result0</span><span class="p">,</span> <span class="n">result1</span><span class="p">,</span> <span class="n">result2</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">run_as</span><span class="p">(</span><span class="n">PT</span><span class="p">,</span> <span class="n">input0</span><span class="p">,</span> <span class="n">input1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Users are expected to use the PropertyType class by inheriting from it. Then
+in the ctor of the derived class they should set the inputs and results
+members. For example to implement the class for <code class="docutils literal notranslate"><span class="pre">PT</span></code> above:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PTClass</span><span class="p">(</span><span class="n">property_type</span><span class="o">.</span><span class="n">PropertyType</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;input0&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;input1&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;result0&#39;</span><span class="p">,</span> <span class="s1">&#39;result1&#39;</span><span class="p">,</span> <span class="s1">&#39;result2&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If applicable the <code class="docutils literal notranslate"><span class="pre">None</span></code> values could be replaced with default values.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Simply sets the state to the provided inputs and results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.inputs">
+<span class="sig-name descname"><span class="pre">inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.inputs" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the inputs that the derived class set.</p>
+<p>The real implementation of PropertyType is significantly more
+complicated than simply having the derived class set the base class’s
+state. The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> function wraps the gymnastics required to get the
+input parameters set by the derived class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The inputs which were set by the derived class. Each input is a
+pair such that the 0-th element is the description/name of the
+parameter and the 1-st element is the default value of the
+parameter.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.10)">set</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>, obj))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.results">
+<span class="sig-name descname"><span class="pre">results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.results" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the results that the derived class set.</p>
+<p>The real implementation of PropertyType is significantly more
+complicated than simply having the derived class set the base class’s
+state. The <code class="docutils literal notranslate"><span class="pre">results</span></code> function wraps the gymnastics required to get the
+results set by the derived class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The results which were set by the derived class. Results do not
+have default values so their only state is the name of the
+result.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.10)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.wrap_inputs">
+<span class="sig-name descname"><span class="pre">wrap_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.wrap_inputs" title="Permalink to this definition"></a></dt>
+<dd><p>Merges the positional arguments args into the provided set of inputs.</p>
+<p>The derived class established a mapping from positional input arguments
+to keys. This function uses that mapping to insert <code class="docutils literal notranslate"><span class="pre">args</span></code> into the
+provided dictionary. After this call, <code class="docutils literal notranslate"><span class="pre">args</span></code> will have been inserted
+into <code class="docutils literal notranslate"><span class="pre">inputs</span></code>. Any keys in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> which are not keys for this
+property type will be left alone; however, keys which are names of
+input parameters known to this property type will have their values
+overridden.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>obj</em><em>)</em>) – The dictionary we are inserting <code class="docutils literal notranslate"><span class="pre">args</span></code> in to. Will be
+modified as a result of calling this function.</p></li>
+<li><p><strong>*args</strong> – A variadic set of values which are treated as positional
+arguments to a function. The number of arguments must
+minimally equal the number of inputs without default
+values and can not exceed the number of recognized
+inputs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the user passes more arguments than the derived
+class set.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the user does not set a value for all
+positional arguments without default values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.wrap_results">
+<span class="sig-name descname"><span class="pre">wrap_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.wrap_results" title="Permalink to this definition"></a></dt>
+<dd><p>Merges the positional arguments args into the provided results.</p>
+<p>The derived class established a mapping from positional results
+to keys. This function uses that mapping to insert <code class="docutils literal notranslate"><span class="pre">args</span></code> into the
+provided dictionary. After this call, <code class="docutils literal notranslate"><span class="pre">args</span></code> will have been inserted
+into <code class="docutils literal notranslate"><span class="pre">results</span></code>. Any keys in <code class="docutils literal notranslate"><span class="pre">results</span></code> which are not keys for this
+property type will be left alone; however, keys which are names of
+input parameters known to this property type will have their values
+overridden.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>obj</em><em>)</em>) – The dictionary we are inserting <code class="docutils literal notranslate"><span class="pre">args</span></code> in to. Will be
+modified as a result of calling this function.</p></li>
+<li><p><strong>*args</strong> – A variadic set of values which are treated as positional
+returns from a function. The number of arguments must
+equal the number of results set by the derived class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.10)"><strong>RuntimeError</strong></a> – If the user passes a different number of results
+than the derived class defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.unwrap_inputs">
+<span class="sig-name descname"><span class="pre">unwrap_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.unwrap_inputs" title="Permalink to this definition"></a></dt>
+<dd><p>Converts from key-value pairs to positional arguments.</p>
+<p>The derived class defines a mapping from positional input arguments to
+keys. This function reverse that mapping to pull arguments out of an
+associative array. This is useful for implementing the callback of a
+Module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>map</em><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>obj</em><em>)</em>) – A map from input name/descriptions to values.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The inputs known to this property type, in the order they were
+declared.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>For a single input the return of this function is just the value
+if there are multiple returns it is a list of values.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If one of the inputs known to this property type is
+not in <code class="docutils literal notranslate"><span class="pre">inputs</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pluginplay.PropertyType.unwrap_results">
+<span class="sig-name descname"><span class="pre">unwrap_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.PropertyType.unwrap_results" title="Permalink to this definition"></a></dt>
+<dd><p>Converts from key-value pairs to positional returns.</p>
+<p>The derived class defines a mapping from positional returns to
+keys. This function reverse that mapping to pull the results out of an
+associative array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>map</em><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>obj</em><em>)</em>) – A map from result name/descriptions to values.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The results known to this property type, in the order they were
+declared.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>For a single input the return of this function is just the value
+if there are multiple returns it is a list of values.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If one of the results known to this property type is
+not in <code class="docutils literal notranslate"><span class="pre">results</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
