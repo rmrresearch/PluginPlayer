@@ -11,3 +11,4 @@ with PluginPlayer).
 
    module
    property_type
+   module_manager

@@ -1,7 +1,5 @@
 from copy import deepcopy
 
-from pluginplay import property_type
-
 class Module:
     """ Encapsulates a user-supplied function.
 
