@@ -35,6 +35,50 @@ class Module:
             raise RuntimeError("No callable in the Module.")
 
 
+    def __assert_unlocked(self):
+        """Code factorization for asserting that the Module is not locked.
+
+        :raises RuntimeError: If the module is locked.
+        """
+
+        if self.locked():
+            raise RuntimeError("Module is locked and can not be modified.")
+
+    def __ready(self, inputs):
+        """Actually implements ready.
+
+        Internally we need to deal with sets of inputs when assessing
+        ready-ness, rather than property types. This function is code
+        factorization for those internal calls, and also implements the public-
+        facing API of ready (the one in terms of property types).
+
+        :param inputs: The inputs which will be set before the module is called.
+        :type inputs: dict(str, obj)
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+
+        self.__assert_has_module()
+
+        nr = self.list_not_ready()
+
+        # If any of the submodules aren't ready then this Module isn't ready
+        if len(nr['Submodules']):
+            return False
+
+        # Need to remove pt_inputs from nr
+        if type(inputs) == dict:
+            for pt_input, _ in inputs.items():
+                if pt_input in nr['Inputs']:
+                    nr['Inputs'].remove(pt_input)
+        elif type(inputs) == list:
+            for (pt_input, _) in inputs:
+                if pt_input in nr['Inputs']:
+                    nr['Inputs'].remove(pt_input)
+
+        return len(nr['Inputs']) == 0
+
+
     def __init__(self, **kwargs):
         r""" Creates a Module instance initialized with the provided state
 
@@ -217,20 +261,7 @@ class Module:
         :raises RuntimeError: If the instance does not wrap a callback.
         """
 
-        self.__assert_has_module()
-
-        nr = self.list_not_ready()
-
-        # If any of the submodules aren't ready then this Module isn't ready
-        if len(nr['Submodules']):
-            return False
-
-        # Need to remove pt_inputs from nr
-        for (pt_input, _) in prop_type.inputs():
-            if pt_input in nr['Inputs']:
-                nr['Inputs'].remove(pt_input)
-
-        return len(nr['Inputs']) == 0
+        return self.__ready(prop_type.inputs())
 
 
     def reset_cache(self):
@@ -378,33 +409,125 @@ class Module:
 
 
     def property_types(self):
-        return self._state['property_types']
+        """Provides the set of PropertyTypes that the module satisfies.
+
+        Most Module instances can be run as one (or more) property type(s). This
+        function is used to determine which PropertyTypes the module satisfies.
+        The exact PropertyTypes a module can satisfy is specified by the module
+        developer.
+
+        :return: The set of PropertyTypes that the module satisfies
+        :rtype: set(PropertyType)
+
+        :rasies RuntimeError: If the instance does not wrap a callback
+        """
+
+        self.__assert_has_module()
+        return deepcopy(self._state['property_types'])
 
     def description(self):
-        return self._state['description']
+        """Provides the description of the module.
+
+        Module developers are encouraged to provide a description of what their
+        module does. This function retrieves that description (if it was set).
+
+        :return: The description of the module.
+        :rtype: str
+
+        :raises RuntimeError: If the instance does not wrap a callback
+        :raises RuntimeError: If the description was not set
+        """
+
+        self.__assert_has_module()
+        if self.has_description():
+            return self._state['description']
+        raise RuntimeError("Description was not set.")
+
 
     def citations(self):
+        """List of references to cite if you use this Module.
+
+        Most modules encapsulate algorithms which have been published in the
+        literature. Module developers are encouraged to provide a list of
+        literature references for the module implementations.
+
+        :return: The literature references users of this Module should cite.
+        :rtype: list(str)
+
+        :raises RuntimeError: If the instance does not wrap a callback.
+        """
+
+        self.__assert_has_module()
         return self._state['citations']
 
     def change_input(self, key, value):
-        if key in self.inputs():
-            self.inputs()[key] = value
+        """Changes the value of a Module-specific input.
 
-        raise KeyError(key + " is not a valid input for this Module.")
+        Modules have two types of inputs: those which are taken from positional
+        arguments (defined as part of one or more PropertyTypes) and those which
+        are specific to the Module. This function can only be used to change the
+        module-specific ones (in the real implementation it can change all the
+        inputs).
+
+        :raises RuntimeError: If the Module does not wrap a callback.
+        :raises RuntimeError: If the Module is locked.
+        :raises KeyError: If the Module does not have an input ``key``
+        """
+
+        self.__assert_has_module()
+        self.__assert_unlocked()
+        if key not in self.inputs():
+            raise KeyError(key + " is not a valid input for this Module.")
+
+        self._state['inputs'][key] = value
 
     def change_submod(self, key, new_mod):
-        if key in self.submods():
-            self.submods()[key] = new_mod
+        """Changes the submodule this module will call.
 
-        raise KeyError(key + " is not a predefined callback point.")
+        The actual implementation of a Module can define multiple callback
+        points. Before the module can be run there must be a Module assigned to
+        each of those callback points. This function allows the user to change
+        what Module is called at a specified callback point.
 
-    def add_property_type(self, new_prop_type):
-        self._property_types.append(new_prop_type)
+        :raises RuntimeError: If the Module does not wrap a callback
+        :raises RuntimeError: If the Module is locked
+        :raises KeyError: If the Module does not have a callback point
+                          associated with ``key``
+        """
 
-    def run_as(prop_type, *args):
-        pass
+        self.__assert_has_module()
+        self.__assert_unlocked()
+        if key not in self.submods():
+            raise KeyError(key + " is not a predefined callback point.")
 
-    def run(inputs):
+        for k, _ in self._state['submods'].items():
+            if k[0] == key:
+                self._state['submods'][k] = new_mod
+
+
+    def run_as(self, prop_type, *args):
+        """Calls the wrapped callable as the specified property type.
+
+        :param prop_type: The PropertyType the callable should be run as.
+        :type prop_type: PropertyType
+        :param \*args: The positional arguments to be forwarded to the callable.
+
+        :return: The result(s) specified by ``prop_type``.
+
+        :raises RuntimeError: If the module does not wrap a callable.
+        :raises RuntimeError: If the module is not ready
+        :raises RuntimeError: If the module does not satisfy ``prop_type``
+        """
+
+        if prop_type not in self._state['property_types']:
+            raise RuntimeError('Does not satisfy property type')
+
+        inputs = {}
+        prop_type.wrap_inputs(inputs, *args)
+        rv = self.run(inputs)
+        return prop_type.unwrap_results(rv)
+
+    def run(self, inputs):
         """This call actually runs the Module with the provided inputs.
 
         Each Module instance has some input state bound to it. In particular it
@@ -420,12 +543,20 @@ class Module:
         :return: A dictionary whose keys are the names of the results and whose
                  values are the values of the respective result.
         :rtype: {str, obj}
+
+        :raises RuntimeError: If the Module does not wrap a callable.
+        :raises RuntimeError: If the Module is not ready
+        :raises BaseException: If the callable raises an error
         """
 
-        pass
+        self.__assert_has_module
+        if not self.__ready(inputs):
+            raise RuntimeError("Module is not ready")
 
-    def hash(self):
-        pass
+        self.lock()
+        subs = self._state['submods']
+        return self._state['callback'](inputs, subs)
+
 
     def __eq__(self, rhs):
         """Determines if the state of this instance is the same as that of rhs.
@@ -449,26 +580,7 @@ class Module:
 
         return self._unlocked == rhs._unlocked and self._state == rhs._state
 
-    def __ne__(self, rhs):
-        """Determines if this Module instance is different than rhs.
-
-        Different, *i.e.*, not equal, is implemented by negating the value
-        equal operation. Thus two Module instances are different if they are not
-        equal.
-
-        :param rhs: The instance we are comparing against.
-        :type rhs:  Module
-
-        :return: False if if this instance compares equal to rhs and True
-                 otherwise.
-        :rtype: bool
-        """
-        return not self == rhs
 
     def __repr__(self):
         return str('Unlocked : %s\n' % self._unlocked) + \
                str('State    : %s\n' % self._state)
-
-
-def print_not_ready(mod, inputs, indent):
-    pass

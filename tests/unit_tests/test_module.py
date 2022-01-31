@@ -33,7 +33,7 @@ class TestModule(unittest.TestCase):
                                  'submods' : {('callback 0', PT0()) : None}
                                 }
 
-        fxn = lambda inputs, submods : 42
+        fxn = lambda inputs, submods : {'result 0' : inputs['input 0'] }
 
         # This module is ready and can be run
         self.ready_submod  = pp.Module(property_types=set([PT0()]))
@@ -45,6 +45,7 @@ class TestModule(unittest.TestCase):
         self.not_ready_submod._state['callback'] = fxn
 
         # This module isn't ready because 'input x' and 'callback 0' aren't set
+        fxn = lambda inputs, submods : submods[('callback 0', PT0())](42)
         self.nondefault_mod = pp.Module(**self.nondefault_state)
         self.nondefault_mod._state['callback'] = fxn
 
@@ -260,6 +261,118 @@ class TestModule(unittest.TestCase):
         mod0._state['submods'][('callback 0', PT0())] = self.ready_submod
         corr = {'callback 0' : self.ready_submod}
         self.assertEqual(mod0.submods(), corr)
+
+
+    def test_property_types(self):
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.property_types)
+
+        mod0 = self.nondefault_mod
+        corr = set([PT0()])
+        self.assertEqual(mod0.property_types(), corr)
+
+
+    def test_description(self):
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.description)
+
+        # Raises an error if no description
+        mod0 = self.ready_submod
+        self.assertRaises(RuntimeError, mod0.description)
+
+        mod0._state['description'] = 'hello world'
+        self.assertEqual(mod0.description(), 'hello world')
+
+
+    def test_citations(self):
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.citations)
+
+        # No citations
+        mod0 = self.ready_submod
+        self.assertEqual(mod0.citations(), [])
+
+        # Citations
+        mod1 = self.nondefault_mod
+        self.assertEqual(mod1.citations(), ['foo et al.'])
+
+
+    def test_change_input(self):
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.change_input, 'input 0', 42)
+
+        # Raises an error if the module is locked
+        mod0 = self.ready_submod
+        mod0.lock()
+        self.assertRaises(RuntimeError, mod0.change_input, 'input 0', 99)
+
+        # Can actually change the input
+        mod1 = self.nondefault_mod
+        mod1.change_input('input x', 42)
+        corr = {'input 0' : None, 'input x' : 42}
+        self.assertEqual(mod1.inputs(), corr)
+
+        # Raises an error if the key does not exist
+        self.assertRaises(KeyError, mod1.change_input, 'not a key', 42)
+
+
+    def test_change_submod(self):
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.change_submod, 'callback 0', None)
+
+        # Raises an error if the module is locked
+        mod0 = self.ready_submod
+        mod0.lock()
+        self.assertRaises(RuntimeError, mod0.change_submod, 'input 0', 99)
+
+        # Can actually change the input
+        mod1 = self.nondefault_mod
+        mod1.change_submod('callback 0', mod0)
+        corr = {'callback 0' : mod0}
+        self.assertEqual(mod1.submods(), corr)
+
+        # Raises an error if the key does not exist
+        self.assertRaises(KeyError, mod1.change_submod, 'not a key', mod0)
+
+    def test_run_as(self):
+        pt = PT0()
+
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.run_as, pt, 42)
+
+        # Can run a ready Module
+        mod0 = self.ready_submod
+        self.assertEqual(mod0.run_as(pt, 42), 42)
+
+        # Raises an error if not ready
+        mod1 = self.not_ready_submod
+        self.assertRaises(RuntimeError, mod1.run_as, pt, 42)
+
+        # Raises an error if it does not satisfy the property type
+        mod0._state['property_types'] = set()
+        self.assertRaises(RuntimeError, mod0.run_as, pt, 42)
+
+
+    def test_run(self):
+        inputs = {'input 0' : 42}
+        corr = {'result 0' : 42}
+
+        # Raises an error if no callback
+        mod = pp.Module()
+        self.assertRaises(RuntimeError, mod.run, inputs)
+
+        # Can run a ready Module
+        mod0 = self.ready_submod
+        self.assertEqual(mod0.run(inputs), corr)
+
+        # Raises an error if not ready
+        mod1 = self.not_ready_submod
+        self.assertRaises(RuntimeError, mod1.run, inputs)
 
 
     def test_comparisons(self):
