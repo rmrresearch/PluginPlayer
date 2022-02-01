@@ -168,10 +168,48 @@ class ModuleManager:
         self._modules[mod_key].change_input(opt_key, value)
 
 
-    def change_submod(self, mod_key, submod_key, value):
+    def change_submod(self, mod_key, callback_key, submod_key):
+        """Changes the submodule a Module calls.
+
+        Modules define callback points. Users can change which modules are
+        called at those callback points by using this function. Unlike going
+        directly through the Module, using the ModuleManager to swap out
+        submodules can be done purely with keys.
+
+        :param mod_key: The key for the module whose submodule will be changed.
+        :type mod_key: str
+        :param callback_key: The identifier for the callback point to change.
+        :type callback_key: str
+        :param submod_key: The key of the module which should be called at the
+                           callback point.
+        :type submod_key: str
+
+        :raises KeyError: If ``mod_key`` is not a valid module key.
+        :raises KeyError: If ``callback_key`` is not a valid callback point
+        :raises KeyError: If ``submod_key`` is not a valid module key.
+        """
+
         self.__assert_has_key(mod_key)
-        self._modules[mod_key].change_submod(submod_key, value)
+        self.__assert_has_key(submod_key)
+        new_submod = self._modules[submod_key]
+        self._modules[mod_key].change_submod(callback_key, new_submod)
 
     def run_as(self, prop_type, mod_key, *args):
+        """Runs a module as the specified properyt type.
+
+        This function is a convenience function for grabbing a module and
+        calling its ``run_as`` member.
+
+        :param prop_type: The PropertyType defining how the module should be
+                          run.
+        :type prop_type: PropertyType
+        :param mod_key: The key for the module to be run.
+        :type mod_key: str
+        :param \*args: The positional arguments the ``prop_type`` calls for.
+
+        :return: The results defined by ``prop_type``.
+
+        :raises KeyError: If ``mod_key`` is not a valid key.
+        """
         self.__assert_has_key(mod_key)
         return self._modules[mod_key].run_as(prop_type, *args)

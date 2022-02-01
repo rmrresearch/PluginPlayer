@@ -1,6 +1,5 @@
-from pluginplayer import property_type
-
-class Area(property_type.PropertyType):
+import pluginplay as pp
+class Area(pp.PropertyType):
 
     def __init__(self):
         inputs = [('base', None), ('height', None)]

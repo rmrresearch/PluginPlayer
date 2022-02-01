@@ -105,3 +105,37 @@ class TestModuleManager(unittest.TestCase):
         # Can change the input
         mm.change_input('Module 1', 'input x', 42)
         self.assertEqual(mm['Module 1'].inputs()['input x'], 42)
+
+
+    def test_change_submod(self):
+        mm = self.mm
+
+        # Raises an error if module key is not valid
+        self.assertRaises(KeyError, mm.change_submod, 'not a key', 'callback 0',
+                          'Module 0')
+
+        # Raises an error if the submodule key is not valid
+        self.assertRaises(KeyError, mm.change_submod, 'Module 1', 'callback 0',
+                          'not a key')
+
+        # Error if the submodule does not have the specified callback point
+        self.assertRaises(KeyError, mm.change_submod, 'Module 1', 'not a key',
+                          'Module 0')
+
+        # Can change submodules
+        mm.change_submod('Module 1', 'callback 0', 'Module 0')
+        submod_key = ('callback 0', PT0())
+        corr = self.mod0
+        self.assertEqual(mm['Module 1']._state['submods'][submod_key], corr)
+
+
+    def test_run_as(self):
+        mm = self.mm
+
+        pt = PT0()
+
+        # Raises an error if module key is not valid
+        self.assertRaises(KeyError, mm.run_as, pt, 'not a key', None)
+
+        # Can actually be run
+        self.assertEqual(mm.run_as(pt, 'Module 0', 42), 42)
