@@ -201,13 +201,54 @@ and then calling <code class="docutils literal notranslate"><span class="pre">ch
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.ModuleManager.change_submod">
-<span class="sig-name descname"><span class="pre">change_submod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submod_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.ModuleManager.change_submod" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">change_submod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submod_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.ModuleManager.change_submod" title="Permalink to this definition"></a></dt>
+<dd><p>Changes the submodule a Module calls.</p>
+<p>Modules define callback points. Users can change which modules are
+called at those callback points by using this function. Unlike going
+directly through the Module, using the ModuleManager to swap out
+submodules can be done purely with keys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mod_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The key for the module whose submodule will be changed.</p></li>
+<li><p><strong>callback_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The identifier for the callback point to change.</p></li>
+<li><p><strong>submod_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The key of the module which should be called at the
+callback point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">mod_key</span></code> is not a valid module key.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">callback_key</span></code> is not a valid callback point</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">submod_key</span></code> is not a valid module key.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pluginplay.ModuleManager.run_as">
 <span class="sig-name descname"><span class="pre">run_as</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pluginplay.ModuleManager.run_as" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Runs a module as the specified properyt type.</p>
+<p>This function is a convenience function for grabbing a module and
+calling its <code class="docutils literal notranslate"><span class="pre">run_as</span></code> member.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prop_type</strong> (<a class="reference internal" href="property_type.html#pluginplay.PropertyType" title="pluginplay.PropertyType"><em>PropertyType</em></a>) – The PropertyType defining how the module should be
+run.</p></li>
+<li><p><strong>mod_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The key for the module to be run.</p></li>
+<li><p><strong>*args</strong> – The positional arguments the <code class="docutils literal notranslate"><span class="pre">prop_type</span></code> calls for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The results defined by <code class="docutils literal notranslate"><span class="pre">prop_type</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.10)"><strong>KeyError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">mod_key</span></code> is not a valid key.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
