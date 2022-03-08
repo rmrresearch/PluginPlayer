@@ -1,0 +1,27 @@
+<CallNode>:
+    BoxLayout:
+        orientation: 'horizontal'
+        pos: root.x, root.top - self.height
+        size: root.width, root.height
+        Label:
+            text: 'widget'
+        Button:
+            text: 'widget'
+        Button:
+            text: 'widget'
+
+<DragNode>:
+    drag_rectangle: self.x, self.y, self.width, self.height
+    drag_timeout: 100
+    drag_distance: 0
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1, 0, 0, 1
+            Line:
+                width: 1
+                rectangle: self.x, self.y, self.width, self.height
+        pos: root.x, root.top - self.height
+        size: root.width, root.height
+        Label:
+            text: 'widget'
