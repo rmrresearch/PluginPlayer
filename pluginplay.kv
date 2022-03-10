@@ -1,19 +1,6 @@
-<CallNode>:
-    BoxLayout:
-        orientation: 'horizontal'
-        pos: root.x, root.top - self.height
-        size: root.width, root.height
-        Label:
-            text: 'widget'
-        Button:
-            text: 'widget'
-        Button:
-            text: 'widget'
-
-<DragNode>:
-    drag_rectangle: self.x, self.y, self.width, self.height
-    drag_timeout: 100
-    drag_distance: 0
+<SourceNode>:
+    pos: root.x, root.top - self.height
+    size: root.width, root.height
     BoxLayout:
         canvas.before:
             Color:
@@ -25,3 +12,45 @@
         size: root.width, root.height
         Label:
             text: 'widget'
+
+<TargetNode>:
+    pos: root.x, root.top - self.height
+    size: root.width, root.height
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1,1, 0, 1
+            Line:
+                width: 1
+                rectangle: self.x, self.y, self.width, self.height
+        pos: root.x, root.top - self.height
+        size: root.width, root.height
+
+<CallGraphNode>:
+    BoxLayout:
+        orientation: "horizontal"
+        pos: self.parent.x + self.parent.indent_lvl * 25, root.top - self.height
+        size: self.parent.width - (self.parent.indent_lvl * 25), 40
+        Button:
+            text: ">"
+        Label:
+            text: "Func1"
+        Button:
+            text: "..."
+        
+
+<Section>
+    Button:
+        id: title
+        pos: root.x, root.top - self.height
+        size: root.width, 40
+        text: "Default Title"
+        disabled: True
+    BoxLayout:
+        id: body
+        padding: 15,15,15,15
+        pos: root.x, root.top - self.height - 40
+        size: root.width, root.height
+        orientation: "vertical"
+    
+   
