@@ -27,17 +27,46 @@
         size: root.width, root.height
 
 <CallGraphNode>:
+    size_hint_y: None
+    size:root.width,50 + (65*self.child_count)
+    pos: root.x, root.top- root.height
     BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 0,1,0,1
+            Line:
+                points: self.x-(25/2),self.top-25,self.x,self.top-25
+            Color:
+                rgba: 0.6,0.6,0.6,1
+            Line:  
+                rectangle: self.x, self.y, self.width, self.height
+        pos: root.x, root.top-50
+        size:root.width,50
         orientation: "horizontal"
-        pos: self.parent.x + self.parent.indent_lvl * 25, root.top - self.height
-        size: self.parent.width - (self.parent.indent_lvl * 25), 40
         Button:
+            size_hint: None, None
+            size:50,50
+            pos: root.x, root.top-50
             text: ">"
         Label:
-            text: "Func1"
+            text: "Module"
         Button:
+            size_hint: None, None
+            size:50,50
+            pos: root.x, root.top-50
             text: "..."
-        
+    BoxLayout:
+        id: childBody 
+        spacing: 15  
+        canvas.before:
+            Color:
+                rgba: 0,1,0,1
+            Line:
+                points: self.x-(25/2), self.top+15, self.x-(25/2),   (self.top-self.height +25 if (root.child_count > 0) else self.top+15)
+        size_hint_y: None
+        orientation: "vertical"
+        pos: root.x + (25*(root.indent_lvl+1)), root.top -  self.minimum_height - 50 - 15
+        size: root.width - (25*(root.indent_lvl+1)), self.minimum_height
 
 <Section>
     Button:
@@ -46,11 +75,15 @@
         size: root.width, 40
         text: "Default Title"
         disabled: True
-    BoxLayout:
-        id: body
-        padding: 15,15,15,15
-        pos: root.x, root.top - self.height - 40
+    ScrollView:
+        pos: root.x, root.top - root.height-title.height
         size: root.width, root.height
-        orientation: "vertical"
-    
-   
+        BoxLayout:
+            padding: 15,15,15,15
+            spacing: 40
+            size_hint_y: None
+            pos: root.x, root.top - self.height
+            size: root.width, self.minimum_height
+            orientation: 'vertical'
+            id: body
+           

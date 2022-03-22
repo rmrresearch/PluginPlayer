@@ -1,7 +1,9 @@
 # code to show how to use nested boxlayouts.
  
 # import kivy module
+from audioop import add
 from ctypes.wintypes import RGB
+from lib2to3.pytree import Node
 from optparse import TitledHelpFormatter
 from textwrap import indent
 from turtle import heading
@@ -16,9 +18,11 @@ from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics import Rectangle, Color
 from kivy.uix.label import Label
 from kivy.core.window import Window
+from kivy.uix.scrollview import ScrollView
 from kivy.lang import Builder
 from kivy.clock import *
 
@@ -28,6 +32,18 @@ class PayLoad():
 
 class CallGraphNode(Widget):
     indent_lvl = 0
+    child_count = 0
+
+    def ChildBody(self):
+        return self.ids.childBody
+
+    def AddSubModule(self):
+        self.child_count += 1
+        sub_module = CallGraphNode()
+        #sub_module.ids.node_label.text = "child"
+        sub_module.SetIndentLvl(self.indent_lvl+1)
+        self.ChildBody().add_widget(sub_module)
+        return sub_module
 
     def SetIndentLvl(self, level):
         self.indent_lvl = level
@@ -76,6 +92,7 @@ class Section(Widget):
         return self.ids.body
     pass
 
+
 class SourceNode(Widget):
     drag = False
     defaultPosX = 0
@@ -118,10 +135,10 @@ class PluginPlay(App):
 
     def update(self,dt):
         self.dragging = False
-        for x in range(0,3):
-            if(self.modulesSection.Body().children[x].IsDragging()):
-                self.dragging = True
-        self.callSection.Body().children[3].SetDragging(self.dragging)    
+       # for x in range(0,3):
+        #    if(self.modulesSection.Body().children[x].IsDragging()):
+        #        self.dragging = True
+        #self.callSection.Body().children[2].SetDragging(self.dragging)    
         
 
     def start(self):
@@ -135,41 +152,31 @@ class PluginPlay(App):
         # use of vertical orientation to set all widgets 
         superBox = BoxLayout(orientation ='horizontal')
 
-        
-
-        
         self.modulesSection = Section()
         self.modulesSection.SetTitle("Modules")
         self.modulesSection.SetWidth(0.6)
+        
+  
 
         self.callSection = Section()        
         self.callSection.SetTitle("CallGraph")
-        
+        call1 = CallGraphNode()
+        call4 = CallGraphNode()
+        call5 = call4.AddSubModule()
+        call4.AddSubModule()
+        call5.AddSubModule()
+        call2 = call1.AddSubModule()
+        call1.AddSubModule()
 
-        BoxLayout
-        #CallNode
-        for x in range(0,3):
-           self.modulesSection.Body().add_widget(SourceNode())
-        
-        
-
-        print(str(self.dragging))
-
-        self.callSection.Body().add_widget(TargetNode())
-        node1 = CallGraphNode()
-        node2 = CallGraphNode()
-        node3 = CallGraphNode()
-        node1.SetIndentLvl(0)
-        node2.SetIndentLvl(1)
-        self.callSection.Body().add_widget(node1)
-        self.callSection.Body().add_widget(node2)
-        self.callSection.Body().add_widget(node3)
+        self.callSection.Body().add_widget(call1)
+        self.callSection.Body().add_widget(call4)
 
         
-        superBox.add_widget(self.modulesSection) 
-        superBox.add_widget(self.callSection) 
 
-        
+        self.callSection
+
+        superBox.add_widget(self.modulesSection)
+        superBox.add_widget(self.callSection)
 
         return superBox
 
