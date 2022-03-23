@@ -2,11 +2,13 @@
  
 # import kivy module
 from audioop import add
+from ctypes import GetLastError
 from ctypes.wintypes import RGB
 from lib2to3.pytree import Node
 from optparse import TitledHelpFormatter
 from textwrap import indent
 from turtle import heading
+from xml.etree.ElementTree import tostring
 import kivy
    
 # this restricts the kivy version i.e
@@ -34,21 +36,47 @@ class CallGraphNode(Widget):
     indent_lvl = 0
     child_count = 0
 
-    def ChildBody(self):
-        return self.ids.childBody
+    def UpdateParent(self):
+        if(isinstance(self.parent.parent, CallGraphNode)):
+            self.parent.parent.height = self.parent.parent.height + 65
+            self.parent.parent.y = self.parent.parent.y - 65
+            self.parent.parent.UpdateParent()
+            
+    def GetLastChildY(self):
+        if(self.child_count > 0):
+            return self.ids.childBody.children[0].top
+        return 0
+
+    def SetLabel(self, text):
+         self.ids.label.text = text
+
+    def GetLabel(self):
+        return self.ids.label.text
 
     def AddSubModule(self):
         self.child_count += 1
         sub_module = CallGraphNode()
-        #sub_module.ids.node_label.text = "child"
-        sub_module.SetIndentLvl(self.indent_lvl+1)
-        self.ChildBody().add_widget(sub_module)
+        sub_module.indent_lvl = self.indent_lvl+1
+        sub_module.SetLabel(self.GetLabel() + "."+str(self.child_count))
+        self.ids.childBody.add_widget(sub_module) 
+        self.height = self.height + 65
+        self.y = self.y - 65
+        self.UpdateParent()
         return sub_module
 
-    def SetIndentLvl(self, level):
-        self.indent_lvl = level
+    def AddSubModuleWithName(self, name):
+        self.child_count += 1
+        sub_module = CallGraphNode()
+        sub_module.indent_lvl = self.indent_lvl+1
+        sub_module.SetLabel(name)
+        self.ids.childBody.add_widget(sub_module)
+        return sub_module
 
-    pass
+    def OnButtonDropDownPress(self):
+        print(self.GetLastChildY())
+    
+    def OnButtonOptionsPress(self):
+        self.AddSubModule()
 
 class TargetNode(Widget):  
     dragging = False
@@ -125,6 +153,16 @@ class SourceNode(Widget):
                   DragActive = True
         return super().on_touch_move(touch)
 
+
+class AddModuleButton(Widget):
+    callgraph = None
+
+    def SetCallGraph(self, CallGraphNode):
+        self.callgraph = CallGraphNode
+
+    def OnPress(self):
+        self.callgraph.add_widget(CallGraphNode())
+
 # class in which we are creating the button by using boxlayout
 # defining the App class
 class PluginPlay(App):
@@ -156,22 +194,14 @@ class PluginPlay(App):
         self.modulesSection.SetTitle("Modules")
         self.modulesSection.SetWidth(0.6)
         
-  
+        
 
         self.callSection = Section()        
         self.callSection.SetTitle("CallGraph")
-        call1 = CallGraphNode()
-        call4 = CallGraphNode()
-        call5 = call4.AddSubModule()
-        call4.AddSubModule()
-        call5.AddSubModule()
-        call2 = call1.AddSubModule()
-        call1.AddSubModule()
 
-        self.callSection.Body().add_widget(call1)
-        self.callSection.Body().add_widget(call4)
-
-        
+        b = AddModuleButton()
+        b.SetCallGraph(self.callSection.Body())
+        self.modulesSection.add_widget(b)
 
         self.callSection
 

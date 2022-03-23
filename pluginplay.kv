@@ -28,47 +28,57 @@
 
 <CallGraphNode>:
     size_hint_y: None
-    size:root.width,50 + (65*self.child_count)
+    size:root.width, 50
     pos: root.x, root.top- root.height
     BoxLayout:
+        id: content
         canvas.before:
             Color:
-                rgba: 0,1,0,1
+                rgba: 0.6,0.6,0.6,1
             Line:
                 points: self.x-(25/2),self.top-25,self.x,self.top-25
             Color:
-                rgba: 0.6,0.6,0.6,1
-            Line:  
-                rectangle: self.x, self.y, self.width, self.height
+                rgba: 0.4,0.4,0.4,1
+            Rectangle: 
+                size: self.width, self.height
+                pos: self.x, self.y
         pos: root.x, root.top-50
-        size:root.width,50
+        size:root.width,self.minimum_height
         orientation: "horizontal"
         Button:
             size_hint: None, None
             size:50,50
             pos: root.x, root.top-50
             text: ">"
+            on_press: root.OnButtonDropDownPress()
         Label:
+            id: label
             text: "Module"
         Button:
             size_hint: None, None
             size:50,50
             pos: root.x, root.top-50
             text: "..."
+            on_press: root.OnButtonOptionsPress()
     BoxLayout:
         id: childBody 
         spacing: 15  
         canvas.before:
             Color:
-                rgba: 0,1,0,1
+                rgba: 0.6,0.6,0.6,1
             Line:
-                points: self.x-(25/2), self.top+15, self.x-(25/2),   (self.top-self.height +25 if (root.child_count > 0) else self.top+15)
+                points: self.x-(25/2), self.top+15, self.x-(25/2),   (root.GetLastChildY()-25 if (root.child_count > 0) else self.top+15)
         size_hint_y: None
         orientation: "vertical"
-        pos: root.x + (25*(root.indent_lvl+1)), root.top -  self.minimum_height - 50 - 15
-        size: root.width - (25*(root.indent_lvl+1)), self.minimum_height
+        pos: root.x + 25, root.top - self.minimum_height - 50 - 15
+        size: root.width - 25, self.minimum_height
 
 <Section>
+    canvas.before:
+        Color:
+            rgba: 0.1,0.1,0.1,1
+        Line:  
+            rectangle: self.x, self.y, self.width, self.height
     Button:
         id: title
         pos: root.x, root.top - self.height
@@ -79,6 +89,7 @@
         pos: root.x, root.top - root.height-title.height
         size: root.width, root.height
         BoxLayout:
+            
             padding: 15,15,15,15
             spacing: 40
             size_hint_y: None
@@ -87,3 +98,8 @@
             orientation: 'vertical'
             id: body
            
+<AddModuleButton>
+    Button:
+        id: AddModuleButton
+        text: "Add Module"
+        on_press: root.OnPress()
