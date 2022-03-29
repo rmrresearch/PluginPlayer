@@ -1,3 +1,29 @@
+<Section>
+    size: root.width, root.height
+    pos: root.x, root.top - self.height
+    canvas.before:
+        Color:
+            rgba: 0.1,0.1,0.1,1
+        Line:  
+            rectangle: self.x, self.y, self.width, self.height
+    Button:
+        id: title
+        pos: root.x, root.top - self.height
+        size: root.width, 40
+        text: "Default Title"
+        disabled: True
+    ScrollView:
+        pos: root.x, root.top - root.height-title.height
+        size: root.width, root.height
+        BoxLayout:
+            padding: 15,15,15,15
+            spacing: 5
+            size_hint_y: None
+            pos: root.x, root.top - self.height - title.height
+            size: root.width, self.minimum_height
+            orientation: 'vertical'
+            id: body
+
 <SourceNode>:
     pos: root.x, root.top - self.height
     size: root.width, root.height
@@ -28,8 +54,8 @@
 
 <CallGraphNode>:
     size_hint_y: None
-    size:root.width, 50
-    pos: root.x, root.top- root.height
+    size: root.width, self.height
+    pos: root.x, root.top - self.height
     BoxLayout:
         id: content
         canvas.before:
@@ -43,11 +69,11 @@
                 size: self.width, self.height
                 pos: self.x, self.y
         pos: root.x, root.top-50
-        size:root.width,self.minimum_height
+        size: root.width, 50
         orientation: "horizontal"
         Button:
             size_hint: None, None
-            size:50,50
+            size: 50,50
             pos: root.x, root.top-50
             text: ">"
             on_press: root.OnButtonDropDownPress()
@@ -55,6 +81,7 @@
             id: label
             text: "Module"
         Button:
+            id: options
             size_hint: None, None
             size:50,50
             pos: root.x, root.top-50
@@ -73,39 +100,119 @@
         pos: root.x + 25, root.top - self.minimum_height - 50 - 15
         size: root.width - 25, self.minimum_height
 
-<Module>
+<ModuleRes>
+    size_hint_y: None
+    size: root.width, 30
+    pos: root.x, root.top - self.height
     Button:
         id: modulebutton
         text: "Module"
         pos: root.x, root.top - self.height
         size: root.width, 30
+        on_press: root.OnPress()
 
-<Section>
-    canvas.before:
-        Color:
-            rgba: 0.1,0.1,0.1,1
-        Line:  
-            rectangle: self.x, self.y, self.width, self.height
-    Button:
-        id: title
-        pos: root.x, root.top - self.height
-        size: root.width, 40
-        text: "Default Title"
-        disabled: True
+
+
+
+<PopupContent>
     ScrollView:
-        pos: root.x, root.top - root.height-title.height
+        pos: root.x, root.top - root.height
         size: root.width, root.height
+        id: scroll
         BoxLayout:
             padding: 15,15,15,15
             spacing: 40
             size_hint_y: None
-            pos: root.x, root.top - self.height - title.height
+            pos: root.x, root.top - self.height
             size: root.width, self.minimum_height
             orientation: 'vertical'
             id: body
-           
-<AddModuleButton>
+
+<RunModule>
+    size_hint_y: None
+    Label:
+        id: label
+        text: "Func1"
+        size: self.size
+        size: root.width, 50
+        pos: root.x, root.top- root.height + 50
+        text_size: self.size
+    BoxLayout:
+        padding: 5
+        canvas.before:
+            Color:
+                rgba: 0.4,0.4,0.4,1
+            Rectangle: 
+                size: self.width, self.height
+                pos: self.x, self.y
+        orientation: "horizontal"
+        size:root.width, 50
+        pos: root.x, root.top- root.height
+        id: body
+        Button: 
+            id: set
+            size_hint_x: None
+            size: 50, 50
+            pos: root.x, root.top- root.height
+            text: "Set"
+            on_press: root.OnPressSet()
+
+<ModuleParam>
+    BoxLayout:
+        size_hint_y: None
+        orientation: "horizontal"
+        size: root.width, root.height
+        pos: root.x, root.top- self.height
+        id: body
+        Label:
+            size_hint_y: None
+            id: label
+            text: "Input"
+            size: root.width, root.height
+            pos: root.x, root.top - self.height
+        TextInput:
+            id: param
+            size_hint_y: None
+            size: root.width, root.height
+            pos: root.x, root.top - self.height
+            text: "0"
+            halign: "center"
+            padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+            multiline: False
+
+
+<RemoveWidget>
     Button:
-        id: AddModuleButton
-        text: "Add Module"
-        on_press: root.OnPress()
+        id: RemoveWidget
+        text: "Remove Module"
+        pos: root.x, root.top - self.height
+        size: root.width, 30
+        on_press: root.RemoveWidget()
+
+
+<ToolRunAll>
+    size_hint_y: None
+    size: self.size
+    Button:
+        halign: "center"
+        size_hint_x: None
+        size_hint_y: None
+        size: 50, 50
+        pos: root.x+root.width/2 -self.width/2, root.top - self.height
+        text: "Run All"
+        on_press: root.RunAll()
+        font_size: 12
+
+<ToolClearAll>
+    size_hint_y: None
+    size: self.size 
+    Button:
+        disabled: True
+        halign: "center"
+        size_hint_x: None
+        size_hint_y: None
+        size: 50, 50
+        pos: root.x+root.width/2 -self.width/2, root.top - self.height
+        text: "Clear All"
+        on_press: root.ClearAll()
+        font_size: 12
