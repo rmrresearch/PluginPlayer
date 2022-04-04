@@ -548,12 +548,15 @@ class Module:
         """
 
         self.__assert_has_module
+
+        all_inputs = self.inputs()
+        all_inputs.update(inputs)
         if not self.__ready(inputs):
             raise RuntimeError("Module is not ready")
 
         self.lock()
         subs = self._state['submods']
-        return self._state['callback'](inputs, subs)
+        return self._state['callback'](all_inputs, subs)
 
 
     def __eq__(self, rhs):

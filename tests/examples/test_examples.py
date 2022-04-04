@@ -1,6 +1,8 @@
 from . import geometry
+import importlib
 import unittest
 import pluginplay as pp
+import math
 
 # The first thing a user of PluginPlay does is import the plugins they want to
 # use (here that's the module collection in the provided geometry package), then
@@ -91,3 +93,25 @@ class TestExamples(unittest.TestCase):
         # and then run the now setup module
         vol = self.mm.run_as(geometry.PrismVolume(), mod0_key, 1.2, 2.3, 3.4)
         self.assertEqual(vol, 0.5 * 1.2 * 2.3 * 3.4)
+
+
+    def test_plugin(self):
+        # This test shows what loading a plugin would look like
+
+        # First we need to load the plugin programmatically, that's done with
+        # importlib (we tell it to load relative to the examples package)
+        plugin = importlib.import_module(".geometry2", package='examples')
+
+        # Now we call the load_modules hook in the plugin which adds the new
+        # modules to our current ModuleManager
+        plugin.load_modules(self.mm)
+
+        # At this point we can call the module just like any other module
+        area = self.mm.run_as(geometry.Area(), "Area of a circle", 1.2, 1.2)
+        self.assertEqual(area, 1.2 * 1.2 * math.pi)
+
+        # We can also change the bound value of pi
+        self.mm.copy_module("Area of a circle", "New area")
+        self.mm.change_input("New area", "pi", 42)
+        area = self.mm.run_as(geometry.Area(), "New area", 1.2, 1.2)
+        self.assertEqual(area, 1.2 * 1.2 * 42)
