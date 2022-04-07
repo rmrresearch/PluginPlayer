@@ -1,6 +1,5 @@
 #import kivy module
 from audioop import add
-from ctypes import GetLastError
 from ctypes.wintypes import RGB
 from json import tool
 from lib2to3.pytree import Node
@@ -13,6 +12,7 @@ from xml.etree.ElementPath import get_parent_map
 from xml.etree.ElementTree import tostring
 from xmlrpc.client import getparser
 import kivy
+import importlib
 
    
 # this restricts the kivy version i.e
@@ -301,8 +301,13 @@ class CallGraphNode(Widget):
 
 class PluginPlay(App):
 
+    def module_loader(self, module):
+        plugin = importlib.import_module(f".{module}", package='examples')
+        plugin.load_modules(moduleManager)
+
     def build(self):
-        geometry2.load_modules(moduleManager)
+        self.module_loader('geometry')
+        self.module_loader('geometry2')
 
         self.title = "Plugin Play"
         grayColor = 0.2
