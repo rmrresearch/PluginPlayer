@@ -8,8 +8,10 @@ from optparse import TitledHelpFormatter
 from re import sub
 from textwrap import indent
 from turtle import heading
+from weakref import ProxyType
 from xml.etree.ElementPath import get_parent_map
 from xml.etree.ElementTree import tostring
+from xmlrpc.client import getparser
 import kivy
 
    
@@ -39,7 +41,7 @@ root_dir = os.path.dirname(my_dir)
 sys.path.append(os.path.join(root_dir, 'src'))
 
 import pluginplay as pp
-from examples import geometry
+from examples import geometry2
 
 
 
@@ -74,10 +76,9 @@ class ModuleRes(Widget):
     def OnPress(self):
         node = CallGraphNode(self.key, self.module)
         self.callgraph.add_widget(node)
-        submodules = list(self.module._state["submods"])
-
-        for k, _ in self.module._state['submods'].items():
-            n = node.AddSubModule(k[0],  self.module._state['submods'][k]) 
+        submodules = list(self.module.submods())
+        for x in submodules:
+            n = node.AddSubModule(x,self.module.submods()[x]) 
         self.parent.remove_widget(self)
 
     def SetLabel(self, name):
@@ -97,28 +98,55 @@ class RemoveWidget(Widget):
     def RemoveWidget(self):
         self.callNode.removeModule()
 
+
+
 class RunModule(Widget):
-    key = None
+    module = None
+    ptype = None
+
+    def disableSet(self, disable):
+        self.disabled = disable
+
+    def __init__(self, module, ptype, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.ptype = ptype
+        self.module = module
+
+    def GetParam(self, index):
+        return float(self.ids.body.children[self.GetParamCount()-1-index].ids.param.text)
+
+    def GetParamCount(self):
+        return self.ids.body.children.__len__() -1
+
+    def OnPressRun(self):
+        input_count = self.GetParamCount()
+        if(input_count == 0):
+            print(self.module.run_as(self.ptype))
+        if(input_count == 1):
+            print(self.module.run_as(self.ptype, self.GetParam(0)))
+        if(input_count == 2):
+            print(self.module.run_as(self.ptype, self.GetParam(0), self.GetParam(1)))
+    
+class ParamModule(Widget):
     module = None
 
     def disableSet(self, disable):
         self.disabled = disable
 
-    def __init__(self, key, module, *args, **kwargs):
+    def __init__(self, module, *args, **kwargs):
         super().__init__(**kwargs)
-        self.key = key
         self.module = module
-        self.ids.label.text = str(key)
-    
-    def GetParam(self, index):
-        return self.ids.body.children[index].GetValue()
+        self.ids.set.disabled = self.module.locked()
 
     def OnPressSet(self):
-        inputs=list(self.module.inputs())
-        for x in range(0, inputs.__len__()):
-            self.module.change_input(str(inputs[x]), self.GetParam(inputs.__len__()- 1-x))
+        parameters = self.ids.body.children.__len__() -1
+        for x in range(0, parameters):
+            paramobj = self.ids.body.children[x]
+            param_name = paramobj.ids.label.text
+            param_value = float(paramobj.ids.param.text)
+            self.module.change_input(param_name, param_value)
     
-class ModuleParam(Widget):
+class ParamField(Widget):
 
     def __init__(self, name, value, *args, **kwargs):
         super().__init__(**kwargs)
@@ -188,22 +216,51 @@ class CallGraphNode(Widget):
             for x in range(0, inputs.__len__()):
                 self.module.change_input(str(inputs[x]), 0)
 
-    def StartPopUp(self):
+    def StartOptionsPopUp(self):
         popup = Popup()
         popup.title = "Options"
         popup.size_hint = (None, None)
         popup.size = (400, 400)
         popupcontent = PopupContent()
-        runModule = RunModule(self.key, self.module)
-        runModule.disableSet(self.optionsdisabled)
-        input_count = self.module.inputs().__len__()
-        inputs = self.module._state["inputs"]
-        names = list(inputs)
-        for x in range(0, input_count):
-            inputField1 = ModuleParam(str(names[x]), inputs[names[x]])
-            runModule.ids.body.add_widget(inputField1)
-        popupcontent.ids.body.add_widget(runModule)
+        paramModule = ParamModule(self.module)
+        paramModule.disableSet(self.optionsdisabled)
+
+        proptypes = list(self.module.property_types())[0]
+        inputs = list(self.module.inputs())
+        propinputs = proptypes.inputs()
+
+        for x in range(0, propinputs.__len__()):
+            propinput = propinputs[x][0]
+            inputs.remove(propinput)
+        
+        for x in range(0, inputs.__len__()):
+            inputField1 = ParamField(str(inputs[x]), 0)
+            paramModule.ids.body.add_widget(inputField1)
+
+        popupcontent.ids.body.add_widget(paramModule)
         popupcontent.ids.body.add_widget(RemoveWidget(self))
+        popup.add_widget(popupcontent)
+        popup.open()
+
+
+    def StartRunModulePopUp(self):
+        popup = Popup()
+        popup.title = "Options"
+        popup.size_hint = (None, None)
+        popup.size = (400, 400)
+        popupcontent = PopupContent()
+        proptypes = list(self.module.property_types())
+        
+
+        for ptype in proptypes:
+            paramModule = RunModule(self.module, ptype)
+            propinputs = ptype.inputs()
+            paramModule.ids.label.text = str(ptype.results())
+            for x in range(0, propinputs.__len__()):
+                inputField1 = ParamField(str(propinputs[x][0]), 0)
+                paramModule.ids.body.add_widget(inputField1)
+            popupcontent.ids.body.add_widget(paramModule)
+        
         popup.add_widget(popupcontent)
         popup.open()
        
@@ -236,31 +293,16 @@ class CallGraphNode(Widget):
     
     
     def OnButtonOptionsPress(self):
-        self.StartPopUp()
+        self.StartOptionsPopUp()
 
     def OnButtonDropDownPress(self):
-       self.RunModule()
-
-    def RunModule(self):
-        input_count = self.module.inputs().__len__()
-        inputs = (self.module._state["inputs"])
-        names = list(inputs)
-        if(input_count == 0):
-            self.SetLabel(self.key + " = " + str(self.module.run_as(list(self.module.property_types())[0])))
-        if(input_count == 1):
-            self.SetLabel(self.key + " = " + str(self.module.run_as(list(self.module.property_types())[0], inputs[names[0]])))
-        if(input_count == 2):
-             self.SetLabel(self.key + " = " + str(self.module.run_as(list(self.module.property_types())[0], inputs[names[0]], inputs[names[1]])))
-        if(input_count == 3):
-           self.SetLabel(self.key + " = " + str(self.module.run_as(list(self.module.property_types())[0], inputs[names[0]], inputs[names[1]], inputs[names[2]], )))
-        self.disableOptions()
-
+       self.StartRunModulePopUp()
 
 
 class PluginPlay(App):
 
     def build(self):
-        geometry.load_modules(moduleManager)
+        geometry2.load_modules(moduleManager)
 
         self.title = "Plugin Play"
         grayColor = 0.2

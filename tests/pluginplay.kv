@@ -128,11 +128,11 @@
             orientation: 'vertical'
             id: body
 
-<RunModule>
+<ParamModule>
     size_hint_y: None
     Label:
         id: label
-        text: "Func1"
+        text: "Input"
         size: self.size
         size: root.width, 50
         pos: root.x, root.top- root.height + 50
@@ -157,7 +157,36 @@
             text: "Set"
             on_press: root.OnPressSet()
 
-<ModuleParam>
+<RunModule>
+    size_hint_y: None
+    Label:
+        id: label
+        text: "Func1"
+        size: self.size
+        size: root.width, 50
+        pos: root.x, root.top- root.height + 50
+        text_size: self.size
+    BoxLayout:
+        padding: 5
+        canvas.before:
+            Color:
+                rgba: 0.4,0.4,0.4,1
+            Rectangle: 
+                size: self.width, self.height
+                pos: self.x, self.y
+        orientation: "horizontal"
+        size:root.width, 50
+        pos: root.x, root.top- root.height
+        id: body
+        Button: 
+            id: run
+            size_hint_x: None
+            size: 50, 50
+            pos: root.x, root.top- root.height
+            text: "Run"
+            on_press: root.OnPressRun()
+
+<ParamField>
     BoxLayout:
         size_hint_y: None
         orientation: "horizontal"

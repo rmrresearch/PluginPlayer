@@ -10,7 +10,6 @@ class PrismVolumeBySubmod(pp.Module):
             area = submods[('area', Area())].run_as(Area(), b, h)
             return {'volume' : area * w}
 
-
         super().__init__(property_types=set([PrismVolume()]),
                          callback= fxn,
                          callback_name='PrismVolumeBySubmod',
