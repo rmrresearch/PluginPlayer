@@ -1,38 +1,15 @@
-#import kivy module
-from audioop import add
-from ctypes.wintypes import RGB
-from json import tool
-from lib2to3.pytree import Node
-from optparse import TitledHelpFormatter
-from re import sub
-from textwrap import indent
-from turtle import heading
-from weakref import ProxyType
-from xml.etree.ElementPath import get_parent_map
-from xml.etree.ElementTree import tostring
-from xmlrpc.client import getparser
 import kivy
-import importlib
 
-   
-# this restricts the kivy version i.e
-# below this kivy version you cannot
-# use the app or software
+# this restricts the kivy version (below this kivy version you cannot use the app or software)
 kivy.require("1.9.1")
    
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
-from kivy.graphics import Rectangle, Color
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.popup import Popup
-from kivy.lang import Builder
-from kivy.clock import *
+from kivy.properties import ObjectProperty
+from kivy.uix.floatlayout import FloatLayout
 import os
 import sys
 
@@ -41,14 +18,29 @@ root_dir = os.path.dirname(my_dir)
 sys.path.append(os.path.join(root_dir, 'src'))
 
 import pluginplay as pp
-from examples import geometry2
-
-
-
-
 
 moduleManager = pp.ModuleManager()
 
+#Name:      module_loader
+#Function:  A Function that loads modules into the module manager via the specified filepath and name
+#Inputs:    Filename    - The path to the module "C:/etc/etc/parentfolderoffile"
+#           Path        - The name of the file to be loaded includeing .py "modulename.py"
+def module_loader(filename, path):
+    import importlib.util
+    try:
+        print(path+"\\"+os.path.basename(os.path.normpath(path)))
+        spec = importlib.util.spec_from_file_location(os.path.basename(os.path.normpath(path)), filename[0])
+        plugin = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plugin)
+        plugin.load_modules(moduleManager)
+    except AttributeError:
+        print("Not a valid module")
+    except KeyError:
+        print("Module already loaded")
+
+
+#Name:      Section
+#Function:  A BoxLayout with a nametag at the top and a body to display content. 
 class Section(Widget):
     def SetTitle(self, title):
         self.ids.title.text = title
@@ -59,48 +51,64 @@ class Section(Widget):
     def Body(self):
         return self.ids.body
 
-class ModuleRes(Widget):
+#Name:      ModuleResource
+#Function:  A Clickable Button that stores a module key. 
+#           OnPress adds the module to the callgraph, and removes it from the list of available modules.
+#Inputs:    Key - The module key this Module Resource represents.
+class ModuleResource(Widget):
     callgraph = None
-    module = None
+    moduleSection = None
     key = None
 
     def __init__(self, key, *args, **kwargs):
         super().__init__(**kwargs)
         self.key = key
-        self.module = moduleManager._modules.get(self.key)
         self.SetLabel(key)
 
-    def SetCallGraph(self, CallGraphNode):
+    def SetSections(self, ModuleSection, CallGraphNode):
+        self.moduleSection = ModuleSection
         self.callgraph = CallGraphNode
 
     def OnPress(self):
-        node = CallGraphNode(self.key, self.module)
-        self.callgraph.add_widget(node)
-        submodules = list(self.module.submods())
+        module = moduleManager._modules.get(self.key)
+        node = CallGraphNode(self.key, module)
+        node.SetSections(self.moduleSection, self.callgraph)
+        self.callgraph.Body().add_widget(node)
+        submodules = list(module.submods())
         for x in submodules:
-            n = node.AddSubModule(x,self.module.submods()[x]) 
+            n = node.AddSubModule(x,module.submods()[x]) 
         self.parent.remove_widget(self)
 
     def SetLabel(self, name):
         self.ids.modulebutton.text = name
 
-class PopupContent(Widget):
+#Name:      PopupContentRegion
+#Function:  Provide a scrollable box layout for Popups
+class PopupContentRegion(Widget):
     pass
 
-class RemoveWidget(Widget):
-    
+#Name:      RemoveCallNodeButton
+#Function:  A Clickable Button that stores a CallGraphNode.
+#           OnPress calls the RemoveModule() function on the stored CallGraphNode
+#Inputs:    CallNode - The CallGraphNode to remove
+class RemoveCallNodeButton(Widget):
     callNode = None
 
-    def __init__(self, CallNode, *args, **kwargs):
+    def __init__(self, CallNode, popup, *args, **kwargs):
         super().__init__(**kwargs)
+        self.popup = popup
         self.callNode = CallNode
 
     def RemoveWidget(self):
-        self.callNode.removeModule()
+        self.callNode.RemoveModule()
+        self.popup.dismiss()
 
 
-
-class RunModule(Widget):
+#Name:      RunModuleButton
+#Function:  A Clickable Button that runs the specified module with the given parameters and ptype.
+#Inputs:    module  - The Module to run when pressed
+#           ptype   - The Property Type to run the module as
+class RunModuleButton(Widget):
     module = None
     ptype = None
 
@@ -127,6 +135,10 @@ class RunModule(Widget):
         if(input_count == 2):
             print(self.module.run_as(self.ptype, self.GetParam(0), self.GetParam(1)))
     
+
+#Name:      ParameterModule
+#Function:  A module that provides inputs to set the fixed inputs of a module
+#Inputs:    module  - The Module to change fixed inputs
 class ParamModule(Widget):
     module = None
 
@@ -146,6 +158,10 @@ class ParamModule(Widget):
             param_value = float(paramobj.ids.param.text)
             self.module.change_input(param_name, param_value)
     
+#Name:      ParameterField
+#Function:  A module that provides a label and a text input to provide the data for a fixed input
+#Inputs:    name  - The name of the input
+#           value  - The value of the input
 class ParamField(Widget):
 
     def __init__(self, name, value, *args, **kwargs):
@@ -159,17 +175,9 @@ class ParamField(Widget):
     def GetValue(self):
         return float(self.ids.param.text)
 
-class ToolRunAll(Widget):
-    container = None
-
-    def SetContainer(self, container):
-        self.container = container
-    
-    def RunAll(self):
-        for x in range(0,self.container.children.__len__()):
-            self.container.children[x].RunModule()
-        
-
+#Name:      ToolClearAll
+#Function:  A button that removes all the modules in the call graph
+#Inputs:    container  - The module that contains the callgraph
 class ToolClearAll(Widget):
     container = None
 
@@ -177,9 +185,49 @@ class ToolClearAll(Widget):
         self.container = container
     
     def ClearAll(self):
-        for x in range(0,self.container.children.__len__()):
-            self.container.children[x].RunModule()
+        print(self.container.children.__len__())
+        for x in range(0, self.container.children.__len__()):
+            self.container.children[0].RemoveModule()
+        pass
 
+
+#Name:      ToolOpenModule
+#Function:  A button that opens the open module popup
+class ToolOpenModule(Widget):
+    moduleSection = None
+    callSection = None
+
+    def __init__(self, moduleSection, callSection, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.moduleSection = moduleSection
+        self.callSection = callSection
+
+    def OpenModule(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+    def load(self, path, filename):
+        module_loader(filename, path)
+
+        self.moduleSection.Body().clear_widgets()
+
+        for x in range(0, moduleManager._modules.keys().__len__()):
+            key = list(moduleManager._modules.keys())[x]
+            m = ModuleResource(key)
+            m.SetSections(self.moduleSection,self.callSection)
+            self.moduleSection.Body().add_widget(m)
+
+        self.dismiss_popup()
+
+#Name:      CallGraphNode
+#Function:  A button that removes all the modules in the call graph
+#Inputs:    key  - The key to the module represented by this node
+#           module  - The module represented by this node
 class CallGraphNode(Widget):
     module = None
     indent_lvl = 0
@@ -189,15 +237,23 @@ class CallGraphNode(Widget):
     modulesSection = None
     callSection = None
 
+    def __init__(self, key, module, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.key = key
+        self.module = module
+        self.SetLabel(self.key)
+        if isinstance(self.module, pp.Module):
+            inputs=list(self.module.inputs())
+        #    for x in range(0, inputs.__len__()):
+        #        self.module.change_input(str(inputs[x]), 0)
+
     def SetSections(self,m,c):
         self.modulesSection = m
         self.callSection = c
 
-    def removeModule(self):
-        moduleManager.erase(self.key)
-        moduleManager.add_module(self.key,self.module)
-        m = ModuleRes(self.key)
-        m.SetCallGraph(self.callSection.Body())
+    def RemoveModule(self):
+        m = ModuleResource(self.key)
+        m.SetSections(self.modulesSection, self.callSection)
         self.modulesSection.Body().add_widget(m)
         self.parent.remove_widget(self)
 
@@ -206,22 +262,12 @@ class CallGraphNode(Widget):
         for x in range (0,self.child_count):
             self.ids.childBody.children[x].disableOptions()
 
-    def __init__(self, key, module, *args, **kwargs):
-        super().__init__(**kwargs)
-        self.key = key
-        self.module = module
-        self.SetLabel(self.key)
-        if isinstance(self.module, pp.Module):
-            inputs=list(self.module.inputs())
-            for x in range(0, inputs.__len__()):
-                self.module.change_input(str(inputs[x]), 0)
-
     def StartOptionsPopUp(self):
         popup = Popup()
         popup.title = "Options"
         popup.size_hint = (None, None)
         popup.size = (400, 400)
-        popupcontent = PopupContent()
+        popupcontent = PopupContentRegion()
         paramModule = ParamModule(self.module)
         paramModule.disableSet(self.optionsdisabled)
 
@@ -238,7 +284,7 @@ class CallGraphNode(Widget):
             paramModule.ids.body.add_widget(inputField1)
 
         popupcontent.ids.body.add_widget(paramModule)
-        popupcontent.ids.body.add_widget(RemoveWidget(self))
+        popupcontent.ids.body.add_widget(RemoveCallNodeButton(self,popup))
         popup.add_widget(popupcontent)
         popup.open()
 
@@ -248,12 +294,12 @@ class CallGraphNode(Widget):
         popup.title = "Options"
         popup.size_hint = (None, None)
         popup.size = (400, 400)
-        popupcontent = PopupContent()
+        popupcontent = PopupContentRegion()
         proptypes = list(self.module.property_types())
         
 
         for ptype in proptypes:
-            paramModule = RunModule(self.module, ptype)
+            paramModule = RunModuleButton(self.module, ptype)
             propinputs = ptype.inputs()
             paramModule.ids.label.text = str(ptype.results())
             for x in range(0, propinputs.__len__()):
@@ -287,6 +333,7 @@ class CallGraphNode(Widget):
         self.child_count += 1
         sub_module = CallGraphNode(key, module)
         sub_module.indent_lvl = self.indent_lvl+1
+        sub_module.SetSections(self.modulesSection, self.callSection)
         self.ids.childBody.add_widget(sub_module)
         sub_module.UpdateParent()
         return sub_module
@@ -298,59 +345,40 @@ class CallGraphNode(Widget):
     def OnButtonDropDownPress(self):
        self.StartRunModulePopUp()
 
+class LoadDialog(FloatLayout):
+    load = ObjectProperty(None)
+    cancel = ObjectProperty(None)
 
 class PluginPlay(App):
-
-    def module_loader(self, module):
-        plugin = importlib.import_module(f".{module}", package='examples')
-        plugin.load_modules(moduleManager)
-
     def build(self):
-        self.module_loader('geometry')
-        self.module_loader('geometry2')
-
         self.title = "Plugin Play"
-        grayColor = 0.2
-        Window.clearcolor = (grayColor, grayColor, grayColor, 1)
-        # To position oriented widgets again in the proper orientation
-        # use of vertical orientation to set all widgets 
+        Window.clearcolor = (0.2, 0.2, 0.2, 1)
+
         superBox = BoxLayout(orientation ='horizontal')
         
-        modulesSection = Section()
         callSection = Section()
+        callSection.SetTitle("CallGraph")
         
+        modulesSection = Section()
         modulesSection.ids.title.text = "Modules"
         modulesSection.SetWidth(0.6)
 
+        
         toolSection = Section()
         toolSection.SetTitle("Tools")
         toolSection.SetWidth(0.15)
-     
-        callSection.SetTitle("CallGraph")
-        
-        for x in range(0, moduleManager._modules.keys().__len__()):
-            key = list(moduleManager._modules.keys())[x]
-            m = ModuleRes(key)
-            m.SetCallGraph(callSection.Body())
-            modulesSection.Body().add_widget(m)
-
-        
-        t = ToolRunAll()
-        t.SetContainer(callSection.Body())
-        toolSection.Body().add_widget(t)
-        toolSection.Body().add_widget(ToolClearAll())
+        toolSection.Body().add_widget(ToolOpenModule(moduleSection = modulesSection, callSection=callSection))
+        clearAll = ToolClearAll()
+        clearAll.SetContainer(callSection.Body())
+        toolSection.Body().add_widget(clearAll)
         
         superBox.add_widget(modulesSection)
         superBox.add_widget(callSection)
-    
         superBox.add_widget(toolSection)
 
         return superBox
 
-# creating the object root for BoxLayoutApp() class 
-root = PluginPlay()
 
-# run function runs the whole program
-# i.e run() method which calls the
-# target function passed to the constructor.
+#Create an instance of the Plugin Play Application and run it
+root = PluginPlay()
 root.run()

@@ -100,7 +100,7 @@
         pos: root.x + 25, root.top - self.minimum_height - 50 - 15
         size: root.width - 25, self.minimum_height
 
-<ModuleRes>
+<ModuleResource>
     size_hint_y: None
     size: root.width, 30
     pos: root.x, root.top - self.height
@@ -114,7 +114,7 @@
 
 
 
-<PopupContent>
+<PopupContentRegion>
     ScrollView:
         pos: root.x, root.top - root.height
         size: root.width, root.height
@@ -132,7 +132,7 @@
     size_hint_y: None
     Label:
         id: label
-        text: "Input"
+        text: "Fixed Parameter"
         size: self.size
         size: root.width, 50
         pos: root.x, root.top- root.height + 50
@@ -157,7 +157,7 @@
             text: "Set"
             on_press: root.OnPressSet()
 
-<RunModule>
+<RunModuleButton>
     size_hint_y: None
     Label:
         id: label
@@ -210,7 +210,7 @@
             multiline: False
 
 
-<RemoveWidget>
+<RemoveCallNodeButton>
     Button:
         id: RemoveWidget
         text: "Remove Module"
@@ -218,25 +218,11 @@
         size: root.width, 30
         on_press: root.RemoveWidget()
 
-
-<ToolRunAll>
-    size_hint_y: None
-    size: self.size
-    Button:
-        halign: "center"
-        size_hint_x: None
-        size_hint_y: None
-        size: 50, 50
-        pos: root.x+root.width/2 -self.width/2, root.top - self.height
-        text: "Run All"
-        on_press: root.RunAll()
-        font_size: 12
-
 <ToolClearAll>
     size_hint_y: None
     size: self.size 
     Button:
-        disabled: True
+        disabled: False
         halign: "center"
         size_hint_x: None
         size_hint_y: None
@@ -245,3 +231,37 @@
         text: "Clear All"
         on_press: root.ClearAll()
         font_size: 12
+
+<ToolOpenModule>
+    size_hint_y: None
+    size: self.size 
+    Button:
+        halign: "center"
+        size_hint_x: None
+        size_hint_y: None
+        size: 50, 50
+        pos: root.x+root.width/2 -self.width/2, root.top - self.height
+        text: "Open"
+        on_press: root.OpenModule()
+        font_size: 12
+
+
+    
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserIconView:
+            id: filechooser
+            path: ""
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
